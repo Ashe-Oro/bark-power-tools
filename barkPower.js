@@ -51,6 +51,8 @@ async function checkBarkPower() {
                     <p><strong>Bark Power Refilled:</strong> ${Math.floor(barkPowerData.todayAllocatedBarks)}</p>
                     <p><strong>Barking Power Remaining:</strong> ${Math.floor(barkPowerData.barkingPower)}</p>
                     <p><strong>Bark Power Used Today:</strong> ${Math.floor(barkPowerUsed)}</p>
+                    <p><strong>Total Barks Given:</strong> ${Math.floor(barkPowerData.totalBarksDonated)}</p>
+                    <p><strong>Total Barks Received:</strong> ${Math.floor(barkPowerData.barksReceived)}</p>
                     <hr>
                     <div id="extraDetails" class="toggle-section">
                         <p><strong>Account ID:</strong> <a href="${hashscanUrl}" target="_blank">${accountId}</a></p>
@@ -58,8 +60,6 @@ async function checkBarkPower() {
                         <p><strong>$hBARK Balance (LP) at time of last refill:</strong> ${Math.floor(hbarkBalanceLP)}</p>
                         <p><strong>HODL Relative Barking Power:</strong> ${Math.floor(barkPowerData.hodlRelativeBarkingPower)}</p>
                         <p><strong>LP Relative Barking Power:</strong> ${Math.floor(barkPowerData.lpRelativeBarkingPower)}</p>
-                        <p><strong>Total Barks Given:</strong> ${Math.floor(barkPowerData.totalBarksDonated)}</p>
-                        <p><strong>Barks Received:</strong> ${Math.floor(barkPowerData.barksReceived)}</p>
                     </div>
                 `;
 
