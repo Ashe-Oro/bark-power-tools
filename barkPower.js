@@ -53,14 +53,6 @@ async function checkBarkPower() {
                     <p><strong>Bark Power Used Today:</strong> ${Math.floor(barkPowerUsed)}</p>
                     <p><strong>Total Barks Given:</strong> ${Math.floor(barkPowerData.totalBarksDonated)}</p>
                     <p><strong>Total Barks Received:</strong> ${Math.floor(barkPowerData.barksReceived)}</p>
-                    <hr>
-                    <div id="extraDetails" class="toggle-section">
-                        <p><strong>Account ID:</strong> <a href="${hashscanUrl}" target="_blank">${accountId}</a></p>
-                        <p><strong>$hBARK Balance (HODL) at time of last refill:</strong> ${Math.floor(hbarkBalanceHODL)}</p>
-                        <p><strong>$hBARK Balance (LP) at time of last refill:</strong> ${Math.floor(hbarkBalanceLP)}</p>
-                        <p><strong>HODL Relative Barking Power:</strong> ${Math.floor(barkPowerData.hodlRelativeBarkingPower)}</p>
-                        <p><strong>LP Relative Barking Power:</strong> ${Math.floor(barkPowerData.lpRelativeBarkingPower)}</p>
-                    </div>
                 `;
 
                 document.getElementById("output").innerHTML = output;
