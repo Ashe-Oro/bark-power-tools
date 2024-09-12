@@ -58,9 +58,9 @@ async function checkBarkPower() {
                 document.getElementById("output").innerHTML = output;
 
                 // Now reset toggle button and hide details section (after the content is rendered)
-                document.getElementById("toggleDetails").innerText = "Show More Details";
-                document.getElementById("toggleDetails").style.display = "block"; // Show the toggle button
-                document.getElementById("extraDetails").style.display = "none"; // Hide details section
+                // document.getElementById("toggleDetails").innerText = "Show More Details";
+                // document.getElementById("toggleDetails").style.display = "block"; // Show the toggle button
+                // document.getElementById("extraDetails").style.display = "none"; // Hide details section
                 
                 document.getElementById("progressContainer").style.display = "block"; // Show the progress bar container
 
