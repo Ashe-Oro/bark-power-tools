@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Check Bark Power</title>
+    <style>
+        /* Body styling with background image */
+        body {
+            font-family: 'Arial', sans-serif;
+            background: url('./images/bark-calc-widget-bkgd-small.png') no-repeat center center fixed;
+            background-size: cover;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        /* Container styling */
+        .container {
+            background-color: rgba(255, 255, 255, 0.85); /* Slight transparency */
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 500px;
+            padding: 20px;
+            margin: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #007bff;
+            margin-bottom: 20px;
+        }
+
+        input[type="text"], button {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .output, .error {
+            margin-top: 20px;
+            font-size: 14px;
+        }
+
+        .error {
+            color: #e74c3c;
+            text-align: center;
+        }
+
+        /* Progress bar container (initially hidden) */
+        .progress-container {
+            margin-top: 20px;
+            display: none; /* Hide until data is loaded */
+        }
+
+        .progress-bar-background {
+            background-color: #ddd;
+            border-radius: 20px;
+            width: 100%;
+            height: 30px;
+            margin: 20px 0; /* Add more padding around the bar */
+            padding: 5px; /* Add internal padding */
+            position: relative;
+        }
+
+        .progress-bar {
+            background-color: #28a745;
+            height: 100%;
+            width: 0%;
+            border-radius: 20px;
+            text-align: center;
+            color: white;
+            line-height: 30px;
+            transition: width 0.5s ease;
+        }
+
+        .toggle-section {
+            display: none; /* Initially hidden */
+        }
+
+        .toggle-button {
+            margin-top: 10px;
+            background-color: #28a745;
+        }
+
+        .toggle-button:hover {
+            background-color: #218838;
+        }
+
+        /* Responsive Media Queries */
+        @media (max-width: 768px) {
+            .container {
+                width: 90%;
+                padding: 15px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            input[type="text"], button {
+                font-size: 14px;
+            }
+
+            .output, .error {
+                font-size: 12px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                background-size: contain;
+            }
+
+            .container {
+                padding: 10px;
+            }
+
+            h1 {
+                font-size: 20px;
+            }
+
+            input[type="text"], button {
+                font-size: 12px;
+            }
+
+            .output, .error {
+                font-size: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Check Bark Power</h1>
+        <input type="text" id="twitterHandle" placeholder="Enter Twitter Handle" />
+        <button onclick="checkBarkPower()">Submit</button>
+
+        <div class="output" id="output"></div>
+        <div class="error" id="error"></div>
+
+        <!-- Progress bar container (initially hidden) -->
+        <div class="progress-container" id="progressContainer">
+            <p>Bark Power Usage:</p>
+            <div class="progress-bar-background">
+                <div class="progress-bar" id="progressBar">0%</div>
+            </div>
+        </div>
+
+        <!-- Button to toggle additional details -->
+        <button class="toggle-button" id="toggleDetails" onclick="toggleDetails()" style="display: none;">Show More Details</button>
+    </div>
+
+    <script src="barkPower.js"></script>
+</body>
+</html>
