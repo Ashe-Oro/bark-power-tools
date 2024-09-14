@@ -76,6 +76,7 @@ async function checkBarkPower() {
                     <p><strong>Total Barks Received:</strong> ${formatNumber(Math.floor(barkPowerData.barksReceived))}</p>
                     <hr>
                     <div id="extraDetails" class="toggle-section">
+                    <p><strong>---ADDITIONAL DETAILS---</strong></p>
                         <p><strong>Account ID:</strong> <a href="${hashscanUrl}" target="_blank">${accountId}</a></p>
                         <p><strong>$hBARK Balance (HODL) at time of last refill:</strong> ${formatNumber(Math.floor(hbarkBalanceHODL))}</p>
                         <p><strong>$hBARK Balance (LP) at time of last refill:</strong> ${formatNumber(Math.floor(hbarkBalanceLP))}</p>
