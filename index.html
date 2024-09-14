@@ -6,154 +6,165 @@
     <title>Check Bark Power</title>
     <style>
         /* Body styling with background image */
-        body {
-            font-family: 'Arial', sans-serif;
-            background: url('./images/bark-calc-widget-bkgd-small.png') no-repeat center center fixed;
-            background-size: cover;
-            color: #333;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
+/* Body styling with background image */
+body {
+    font-family: 'Arial', sans-serif;
+    background: url('./images/bark-calc-widget-bkgd-small.png') no-repeat center center fixed;
+    background-size: cover;
+    color: #333;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
 
-        /* Container styling */
-        .container {
-            background-color: rgba(255, 255, 255, 0.85); /* Slight transparency */
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            width: 100%;
-            max-width: 500px;
-            padding: 20px;
-            margin: 20px;
-        }
+/* Container styling */
+.container {
+    background-color: rgba(255, 255, 255, 0.85); /* Slight transparency */
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 500px;
+    padding: 20px;
+    margin: 20px;
+}
 
-        h1 {
-            text-align: center;
-            color: #007bff;
-            margin-bottom: 20px;
-        }
+/* Font color for Bark Power Checker */
+h1 {
+    text-align: center;
+    color: #1F3C40; /* Updated to requested color */
+    margin-bottom: 20px;
+}
 
-        input[type="text"], button {
-            width: 100%;
-            padding: 12px;
-            margin-bottom: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 16px;
-            box-sizing: border-box; /* Ensure padding and border are included in the total width */
-        }
+input[type="text"], button {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+    box-sizing: border-box; /* Ensure padding and border are included in the total width */
+}
 
-        button {
-            background-color: #007bff;
-            color: white;
-            border: none;
-            cursor: pointer;
-        }
+/* Submit button updated to requested color */
+button {
+    background-color: #18BAA4; /* Updated to requested color */
+    color: white;
+    border: none;
+    cursor: pointer;
+}
 
-        button:hover {
-            background-color: #0056b3;
-        }
+button:hover {
+    background-color: #18BAA4; /* Darker shade for hover */
+}
 
-        .output, .error {
-            margin-top: 20px;
-            font-size: 14px;
-        }
+.output, .error {
+    margin-top: 20px;
+    font-size: 14px;
+}
 
-        .error {
-            color: #e74c3c;
-            text-align: center;
-        }
+.error {
+    color: #e74c3c;
+    text-align: center;
+}
 
-        /* Progress bar container (initially hidden) */
-        .progress-container {
-            margin-top: 20px;
-            display: none; /* Hide until data is loaded */
-        }
+/* Progress bar container (initially hidden) */
+.progress-container {
+    margin-top: 20px;
+    display: none; /* Hide until data is loaded */
+}
 
-        .progress-bar-background {
-            background-color: #ddd;
-            border-radius: 20px;
-            width: 100%;
-            height: 30px;
-            margin: 20px 0; /* Add more padding around the bar */
-            padding: 5px; /* Add internal padding */
-            position: relative;
-        }
+.progress-bar-background {
+    background-color: grey;
+    border-radius: 20px;
+    width: 100%;
+    height: 30px;
+    margin: 20px 0; /* Add more padding around the bar */
+    padding: 5px; /* Add internal padding */
+    position: relative;
+}
 
-        .progress-bar {
-            background-color: #28a745;
-            height: 100%;
-            width: 0%;
-            border-radius: 20px;
-            text-align: center;
-            color: white;
-            line-height: 30px;
-            transition: width 0.5s ease;
-        }
+/* Progress bar updated to requested color */
+.progress-bar {
+    background-color: #18BAA4; /* Updated to requested color */
+    height: 100%;
+    width: 0%;
+    border-radius: 20px;
+    text-align: center;
+    color: white;
+    line-height: 30px;
+    transition: width 0.5s ease;
+}
 
-        .toggle-section {
-            display: none; /* Initially hidden */
-        }
+.toggle-section {
+    display: none; /* Initially hidden */
+}
 
-        .toggle-button {
-            margin-top: 10px;
-            background-color: #28a745;
-        }
+/* Show More Details button with updated color */
+.toggle-button {
+    margin-top: 10px;
+    background-color: #1F3C40; /* Updated to requested color */
+    color: white;
+    border: none;
+    padding: 12px;
+    border-radius: 4px;
+    cursor: pointer;
+}
 
-        .toggle-button:hover {
-            background-color: #218838;
-        }
+.toggle-button:hover {
+    background-color: #162a2d; /* Darker shade for hover */
+}
 
-        /* Responsive Media Queries */
-        @media (max-width: 768px) {
-            .container {
-                width: 90%;
-                padding: 15px;
-            }
+/* Responsive Media Queries */
+@media (max-width: 768px) {
+    .container {
+        width: 90%;
+        padding: 15px;
+    }
 
-            h1 {
-                font-size: 24px;
-            }
+    h1 {
+        font-size: 24px;
+    }
 
-            input[type="text"], button {
-                font-size: 14px;
-            }
+    input[type="text"], button {
+        font-size: 14px;
+    }
 
-            .output, .error {
-                font-size: 12px;
-            }
-        }
+    .output, .error {
+        font-size: 12px;
+    }
+}
 
-        @media (max-width: 480px) {
-            body {
-                background-size: contain;
-            }
+@media (max-width: 480px) {
+    body {
+        background-size: contain;
+    }
 
-            .container {
-                padding: 10px;
-            }
+    .container {
+        padding: 10px;
+    }
 
-            h1 {
-                font-size: 20px;
-            }
+    h1 {
+        font-size: 20px;
+    }
 
-            input[type="text"], button {
-                font-size: 12px;
-            }
+    input[type="text"], button {
+        font-size: 12px;
+    }
 
-            .output, .error {
-                font-size: 10px;
-            }
-        }
+    .output, .error {
+        font-size: 10px;
+    }
+}
+
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Check Bark Power</h1>
-        <input type="text" id="twitterHandle" placeholder="Enter Twitter Handle" />
+        <input type="text" id="twitterHandle" placeholder="Enter Twitter Handle" value="TheBarkingGame" />
         <button onclick="checkBarkPower()">Submit</button>
 
         <div class="output" id="output"></div>
