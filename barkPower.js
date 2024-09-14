@@ -8,7 +8,10 @@ async function checkBarkPower() {
     document.getElementById("toggleDetails").style.display = "none"; // Hide the toggle button initially
     document.getElementById("progressContainer").style.display = "none"; // Hide the progress bar initially
 
-    const twitterHandle = document.getElementById('twitterHandle').value;
+    let twitterHandle = document.getElementById('twitterHandle').value;
+
+    // Sanitize the twitterHandle
+    twitterHandle = sanitizeTwitterHandle(twitterHandle);
 
     if (!twitterHandle) {
         document.getElementById('error').textContent = 'Please enter a Twitter handle.';
@@ -93,6 +96,11 @@ function toggleDetails() {
         extraDetails.style.display = "none";
         document.getElementById("toggleDetails").innerText = "Show More Details";
     }
+}
+
+function sanitizeTwitterHandle(handle) {
+    // Remove the @ symbol if it exists
+    return handle.replace(/^@/, '');
 }
 
 // Function to update the progress bar
