@@ -1,10 +1,22 @@
 // Global flag for toggling
 let detailsVisible = false;
 
+// Function to sanitize the Twitter handle
+function sanitizeTwitterHandle(handle) {
+    // Remove the @ symbol if it exists
+    return handle.replace(/^@/, '');
+}
+
+// Function to format numbers with commas
+function formatNumber(number) {
+    return number.toLocaleString('en-US'); // Formats number with commas for the US
+}
+
 async function checkBarkPower() {
     // Clear previous output and error messages
     document.getElementById("output").innerHTML = "";
     document.getElementById("error").innerHTML = "";
+    document.getElementById("toggleDetails").style.display = "none"; // Hide the toggle button initially
     document.getElementById("progressContainer").style.display = "none"; // Hide the progress bar initially
 
     let twitterHandle = document.getElementById('twitterHandle').value;
@@ -49,20 +61,27 @@ async function checkBarkPower() {
                 const barkPowerUsed = barkPowerData.todayAllocatedBarks - barkPowerData.barkingPower;
                 const barkPowerPercentageUsed = (barkPowerUsed / barkPowerData.todayAllocatedBarks) * 100;
 
-                // Display the core information (without HODL and LP balances)
+                // Step 3: Fetch the account balance from the additional API endpoint
+                const userHbarkBalanceURL = `https://mainnet-public.mirrornode.hedera.com/api/v1/tokens/0.0.5022567/balances?account.id=${accountId}`;
+                let balanceResponse = await fetch(userHbarkBalanceURL);
+                let balanceData = await balanceResponse.json();
+                let accountBalance = balanceData.balances[0]?.balance || 0;
+
+                // Display the core information (with comma formatting for numbers)
                 const output = `
-                    <p><strong>Bark Power Refilled:</strong> ${Math.floor(barkPowerData.todayAllocatedBarks)}</p>
-                    <p><strong>Barking Power Remaining:</strong> ${Math.floor(barkPowerData.barkingPower)}</p>
-                    <p><strong>Bark Power Used Today:</strong> ${Math.floor(barkPowerUsed)}</p>
-                    <p><strong>Total Barks Given:</strong> ${Math.floor(barkPowerData.totalBarksDonated)}</p>
-                    <p><strong>Total Barks Received:</strong> ${Math.floor(barkPowerData.barksReceived)}</p>
+                    <p><strong>Bark Power Refilled:</strong> ${formatNumber(Math.floor(barkPowerData.todayAllocatedBarks))}</p>
+                    <p><strong>Barking Power Remaining:</strong> ${formatNumber(Math.floor(barkPowerData.barkingPower))}</p>
+                    <p><strong>Bark Power Used Today:</strong> ${formatNumber(Math.floor(barkPowerUsed))}</p>
+                    <p><strong>Total Barks Given:</strong> ${formatNumber(Math.floor(barkPowerData.totalBarksDonated))}</p>
+                    <p><strong>Total Barks Received:</strong> ${formatNumber(Math.floor(barkPowerData.barksReceived))}</p>
                     <hr>
                     <div id="extraDetails" class="toggle-section">
                         <p><strong>Account ID:</strong> <a href="${hashscanUrl}" target="_blank">${accountId}</a></p>
-                        <p><strong>$hBARK Balance (HODL) at time of last refill:</strong> ${Math.floor(hbarkBalanceHODL)}</p>
-                        <p><strong>$hBARK Balance (LP) at time of last refill:</strong> ${Math.floor(hbarkBalanceLP)}</p>
-                        <p><strong>HODL Relative Barking Power:</strong> ${Math.floor(barkPowerData.hodlRelativeBarkingPower)}</p>
-                        <p><strong>LP Relative Barking Power:</strong> ${Math.floor(barkPowerData.lpRelativeBarkingPower)}</p>
+                        <p><strong>$hBARK Balance (HODL) at time of last refill:</strong> ${formatNumber(Math.floor(hbarkBalanceHODL))}</p>
+                        <p><strong>$hBARK Balance (LP) at time of last refill:</strong> ${formatNumber(Math.floor(hbarkBalanceLP))}</p>
+                        <p><strong>Account Balance:</strong> ${formatNumber(accountBalance)}</p>
+                        <p><strong>HODL Relative Barking Power:</strong> ${formatNumber(Math.floor(barkPowerData.hodlRelativeBarkingPower))}</p>
+                        <p><strong>LP Relative Barking Power:</strong> ${formatNumber(Math.floor(barkPowerData.lpRelativeBarkingPower))}</p>
                     </div>
                 `;
 
@@ -84,7 +103,7 @@ async function checkBarkPower() {
             document.getElementById('error').textContent = "Twitter user has not verified to play The Barking Game";
         }
     } catch (error) {
-        document.getElementById("error").textContent = "An error occurred. Please try again.";
+        document.getElementById('error').textContent = "An error occurred while fetching data.";
     }
 }
 
