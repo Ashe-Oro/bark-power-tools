@@ -29,7 +29,7 @@ async function checkBarkPower() {
 
             // Display the AccountID as a link
             let accountId = userData.accountId;
-            const hashscanUrl = `https://hashscan.io/mainnet/account/0.0.7017957/${accountId}`;
+            const hashscanUrl = `https://hashscan.io/mainnet/account/${accountId}`;
             
             // Step 2: Fetch barking power using the accountId
             let barkingPowerUrl = `http://sure-angeline-piotrswierzy-b061c303.koyeb.app/barking-power/${accountId}`;
