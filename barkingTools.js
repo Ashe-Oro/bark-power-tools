@@ -89,31 +89,40 @@ async function checkBarkPower() {
                 let balanceData = await balanceResponse.json();
                 let accountBalance = balanceData.balances[0]?.balance || 0;
 
-                // Display the core information (with comma formatting for numbers)
-                const output = `
-                    <p><strong>Bark Power Refilled:</strong> ${formatNumber(Math.floor(barkPowerData.todayAllocatedBarks))}</p>
-                    <p><strong>Barking Power Remaining:</strong> ${formatNumber(Math.floor(barkPowerData.barkingPower))}</p>
-                    <p><strong>Bark Power Used Today:</strong> ${formatNumber(Math.floor(barkPowerUsed))}</p>
-                    <p><strong>Total Barks Given:</strong> ${formatNumber(Math.floor(barkPowerData.totalBarksDonated))}</p>
-                    <p><strong>Total Barks Received:</strong> ${formatNumber(Math.floor(barkPowerData.barksReceived))}</p>
-                    <hr>
-                    <div id="extraDetails" class="toggle-section">
-                        <p><strong>---ADDITIONAL DETAILS---</strong></p>
-                        <p><strong>Account ID:</strong> <a href="${hashscanUrl}" target="_blank">${accountId}</a></p>
-                        <p><strong>$hBARK Balance (HODL) at time of last refill:</strong> ${formatNumber(Math.floor(hbarkBalanceHODL))}</p>
-                        <p><strong>$hBARK Balance (LP) at time of last refill:</strong> ${formatNumber(Math.floor(hbarkBalanceLP))}</p>
-                        <p><strong>Account Balance:</strong> ${formatNumber(accountBalance)}</p>
-                        <p><strong>HODL Relative Barking Power:</strong> ${formatNumber(Math.floor(barkPowerData.hodlRelativeBarkingPower))}</p>
-                        <p><strong>LP Relative Barking Power:</strong> ${formatNumber(Math.floor(barkPowerData.lpRelativeBarkingPower))}</p>
-                    </div>
-                `;
+                // // Display the core information (with comma formatting for numbers)
+                // const output = `
+                //     <p><strong>Bark Power Refilled:</strong> ${formatNumber(Math.floor(barkPowerData.todayAllocatedBarks))}</p>
+                //     <p><strong>Barking Power Remaining:</strong> ${formatNumber(Math.floor(barkPowerData.barkingPower))}</p>
+                //     <p><strong>Bark Power Used Today:</strong> ${formatNumber(Math.floor(barkPowerUsed))}</p>
+                //     <p><strong>Total Barks Given:</strong> ${formatNumber(Math.floor(barkPowerData.totalBarksDonated))}</p>
+                //     <p><strong>Total Barks Received:</strong> ${formatNumber(Math.floor(barkPowerData.barksReceived))}</p>
+                //     <hr>
+                //     <div id="extraDetails" class="toggle-section">
+                //         <p><strong>---ADDITIONAL DETAILS---</strong></p>
+                //         <p><strong>Account ID:</strong> <a href="${hashscanUrl}" target="_blank">${accountId}</a></p>
+                //         <p><strong>$hBARK Balance (HODL) at time of last refill:</strong> ${formatNumber(Math.floor(hbarkBalanceHODL))}</p>
+                //         <p><strong>$hBARK Balance (LP) at time of last refill:</strong> ${formatNumber(Math.floor(hbarkBalanceLP))}</p>
+                //         <p><strong>Account Balance:</strong> ${formatNumber(accountBalance)}</p>
+                //         <p><strong>HODL Relative Barking Power:</strong> ${formatNumber(Math.floor(barkPowerData.hodlRelativeBarkingPower))}</p>
+                //         <p><strong>LP Relative Barking Power:</strong> ${formatNumber(Math.floor(barkPowerData.lpRelativeBarkingPower))}</p>
+                //     </div>
+                // `;
+
+                  // Display the core information (with comma formatting for numbers)
+                  const output = `
+                  <p><strong>Bark Power Refilled:</strong> ${formatNumber(Math.floor(barkPowerData.todayAllocatedBarks))}</p>
+                  <p><strong>Barking Power Remaining:</strong> ${formatNumber(Math.floor(barkPowerData.barkingPower))}</p>
+                  <p><strong>Bark Power Used Today:</strong> ${formatNumber(Math.floor(barkPowerUsed))}</p>
+                  <p><strong>Total Barks Given:</strong> ${formatNumber(Math.floor(barkPowerData.totalBarksDonated))}</p>
+                  <p><strong>Total Barks Received:</strong> ${formatNumber(Math.floor(barkPowerData.barksReceived))}</p>
+                  `;
 
                 document.getElementById("output").innerHTML = output;
 
                 // Now reset toggle button and hide details section (after the content is rendered)
-                document.getElementById("toggleDetails").innerText = "Show More Details";
-                document.getElementById("toggleDetails").style.display = "block"; // Show the toggle button
-                document.getElementById("extraDetails").style.display = "none"; // Hide details section
+                //document.getElementById("toggleDetails").innerText = "Show More Details";
+                //document.getElementById("toggleDetails").style.display = "block"; // Show the toggle button
+                //document.getElementById("extraDetails").style.display = "none"; // Hide details section
                 
                 document.getElementById("progressContainer").style.display = "block"; // Show the progress bar container
 
