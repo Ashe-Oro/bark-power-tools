@@ -7,13 +7,22 @@ function sanitizeTwitterHandle(handle) {
     return handle.replace(/^@/, '');
 }
 
+// Function to sanitize general input to prevent XSS or other issues
+function sanitizeInput(input) {
+    return input.replace(/[<>\/]/g, ''); // Strip harmful characters
+}
+
+// Function to check if the input is a valid accountId in the format 0.0.xxxx
+function isAccountId(input) {
+    // Regex to match the accountId format (e.g., 0.0.5225094)
+    const accountIdRegex = /^0\.0\.\d+$/;
+    return accountIdRegex.test(input);
+}
+
 // Function to format numbers with commas
 function formatNumber(number) {
     return number.toLocaleString('en-US'); // Formats number with commas for the US
 }
-
-
-
 
 async function checkBarkPower() {
     // Clear previous output and error messages
@@ -22,36 +31,46 @@ async function checkBarkPower() {
     document.getElementById("toggleDetails").style.display = "none"; // Hide the toggle button initially
     document.getElementById("progressContainer").style.display = "none"; // Hide the progress bar initially
 
-    let twitterHandle = document.getElementById('twitterHandle').value;
+    // Get the user input (could be a Twitter handle or accountId)
+    let userInput = document.getElementById('twitterHandle').value;
 
-    // Sanitize the twitterHandle
-    twitterHandle = sanitizeTwitterHandle(twitterHandle);
+    // Sanitize the user input
+    userInput = sanitizeInput(userInput);
 
-    if (!twitterHandle) {
-        document.getElementById('error').textContent = 'Please enter a Twitter handle.';
-        return;
+    // Check if the input is an accountId or Twitter handle
+    let url;
+    if (isAccountId(userInput)) {
+        // If it's an accountId, use the accountId-based API endpoint
+        url = `https://sure-angeline-piotrswierzy-b061c303.koyeb.app/users/${userInput}`;
+    } else {
+        // Otherwise, treat it as a Twitter handle and sanitize it further
+        userInput = sanitizeTwitterHandle(userInput);
+
+        if (!userInput) {
+            document.getElementById('error').textContent = 'Please enter a valid Twitter handle or account ID.';
+            return;
+        }
+
+        // Use the Twitter handle-based API endpoint
+        url = `https://sure-angeline-piotrswierzy-b061c303.koyeb.app/users/twitter/${userInput}`;
     }
 
-    // Step 1: Fetch user by Twitter handle
-    const url = `http://sure-angeline-piotrswierzy-b061c303.koyeb.app/users/twitter/${twitterHandle}`;
-    
     try {
         let response = await fetch(url);
         if (response.ok) {
             let userData = await response.json();
-            
+
             if (!userData.accountId) {
-                document.getElementById('error').textContent = "Twitter user has not verified to play The Barking Game";
+                document.getElementById('error').textContent = "User has not verified to play The Barking Game.";
                 return;
             }
 
             // Display the AccountID as a link
             let accountId = userData.accountId;
             const hashscanUrl = `https://hashscan.io/mainnet/account/${accountId}`;
-            
-            // Step 2: Fetch barking power using the accountId
+
+            // Fetch barking power using the accountId
             let barkingPowerUrl = `http://sure-angeline-piotrswierzy-b061c303.koyeb.app/barking-power/${accountId}`;
-            
             response = await fetch(barkingPowerUrl);
             if (response.ok) {
                 let barkPowerData = await response.json();
@@ -79,7 +98,7 @@ async function checkBarkPower() {
                     <p><strong>Total Barks Received:</strong> ${formatNumber(Math.floor(barkPowerData.barksReceived))}</p>
                     <hr>
                     <div id="extraDetails" class="toggle-section">
-                    <p><strong>---ADDITIONAL DETAILS---</strong></p>
+                        <p><strong>---ADDITIONAL DETAILS---</strong></p>
                         <p><strong>Account ID:</strong> <a href="${hashscanUrl}" target="_blank">${accountId}</a></p>
                         <p><strong>$hBARK Balance (HODL) at time of last refill:</strong> ${formatNumber(Math.floor(hbarkBalanceHODL))}</p>
                         <p><strong>$hBARK Balance (LP) at time of last refill:</strong> ${formatNumber(Math.floor(hbarkBalanceLP))}</p>
@@ -104,10 +123,10 @@ async function checkBarkPower() {
                 document.getElementById('error').textContent = "Failed to fetch barking power details.";
             }
         } else {
-            document.getElementById('error').textContent = "Twitter user has not verified to play The Barking Game";
+            document.getElementById('error').textContent = "User has not verified to play The Barking Game.";
         }
     } catch (error) {
-        document.getElementById('error').textContent = "An error occurred while fetching data.";
+        document.getElementById('error').textContent = "An error occurred while fetching data. Please ensure the account ID or Twitter handle is correct.";
     }
 }
 
@@ -158,11 +177,8 @@ async function fetchBarksRemaining() {
     }
 }
 
-
-
 // Event listener for the button click to trigger fetching barks remaining
 document.getElementById('fetchBarksRemainingButton').addEventListener('click', fetchBarksRemaining);
-
 
 // Function to toggle the visibility of additional details
 function toggleDetails() {
