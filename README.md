@@ -1,5 +1,8 @@
 # Bark Power Tools
 
+![image](https://github.com/user-attachments/assets/f05f6590-cca8-4d82-95ca-91245610c879)
+
+
 This is a web-based application that allows users to check **Bark Power** statistics in the Barking Game, which is part of the **HBARk Club**. It fetches data for both **Twitter handles** and **accountIds** in the Hedera Hashgraph ecosystem. The app also displays a leaderboard of users with **Bark Power Remaining**.
 
 Visit our homepage at [hbark.club](https://hbark.club).
