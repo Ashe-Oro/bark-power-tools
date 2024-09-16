@@ -12,6 +12,9 @@ function formatNumber(number) {
     return number.toLocaleString('en-US'); // Formats number with commas for the US
 }
 
+
+
+
 async function checkBarkPower() {
     // Clear previous output and error messages
     document.getElementById("output").innerHTML = "";
@@ -107,6 +110,59 @@ async function checkBarkPower() {
         document.getElementById('error').textContent = "An error occurred while fetching data.";
     }
 }
+
+// Function to fetch and display the "Barks Remaining" leaderboard
+async function fetchBarksRemaining() {
+    const url = 'https://sure-angeline-piotrswierzy-b061c303.koyeb.app/barking-power/leaderboard/barkingPower/50';
+    const leaderboardTable = document.getElementById('barksRemainingLeaderboardBody');
+    const leaderboard = document.getElementById('barksRemainingLeaderboard'); // Get the table element
+    
+    try {
+        let response = await fetch(url);
+        if (response.ok) {
+            let data = await response.json();
+
+            // Clear existing leaderboard content
+            leaderboardTable.innerHTML = '';
+
+            // Loop through the data and populate the leaderboard
+            data.forEach((item) => {
+                let row = document.createElement('tr');
+                
+                // Check if twitterHandle exists, if not use accountId
+                let displayName = item.twitterHandle ? item.twitterHandle : item.accountId;
+
+                // Create the Twitter User (or Account ID) cell
+                let twitterUserCell = document.createElement('td');
+                twitterUserCell.textContent = displayName;
+                
+                // Create the Bark Power Remaining cell (with number formatting)
+                let barkPowerRemainingCell = document.createElement('td');
+                barkPowerRemainingCell.textContent = item.barkingPower.toLocaleString('en-US'); // format number with commas
+
+                // Append the cells to the row
+                row.appendChild(twitterUserCell);
+                row.appendChild(barkPowerRemainingCell);
+                
+                // Append the row to the table body
+                leaderboardTable.appendChild(row);
+            });
+
+            // Show the leaderboard after the data is loaded
+            leaderboard.style.display = 'table'; // Ensures the table is visible
+        } else {
+            console.error('Failed to fetch barks remaining data.');
+        }
+    } catch (error) {
+        console.error('Error occurred while fetching barks remaining data:', error);
+    }
+}
+
+
+
+// Event listener for the button click to trigger fetching barks remaining
+document.getElementById('fetchBarksRemainingButton').addEventListener('click', fetchBarksRemaining);
+
 
 // Function to toggle the visibility of additional details
 function toggleDetails() {
