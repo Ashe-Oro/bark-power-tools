@@ -70,7 +70,7 @@ async function checkBarkPower() {
             const hashscanUrl = `https://hashscan.io/mainnet/account/${accountId}`;
 
             // Fetch barking power using the accountId
-            let barkingPowerUrl = `http://sure-angeline-piotrswierzy-b061c303.koyeb.app/barking-power/${accountId}`;
+            let barkingPowerUrl = `https://sure-angeline-piotrswierzy-b061c303.koyeb.app/barking-power/${accountId}`;
             response = await fetch(barkingPowerUrl);
             if (response.ok) {
                 let barkPowerData = await response.json();
