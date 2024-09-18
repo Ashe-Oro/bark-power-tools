@@ -89,41 +89,41 @@ async function checkBarkPower() {
                 let balanceData = await balanceResponse.json();
                 let accountBalance = balanceData.balances[0]?.balance || 0;
 
-                // // Display the core information (with comma formatting for numbers)
-                // const output = `
-                //     <p><strong>Bark Power Refilled:</strong> ${formatNumber(Math.floor(barkPowerData.todayAllocatedBarks))}</p>
-                //     <p><strong>Barking Power Remaining:</strong> ${formatNumber(Math.floor(barkPowerData.barkingPower))}</p>
-                //     <p><strong>Bark Power Used Today:</strong> ${formatNumber(Math.floor(barkPowerUsed))}</p>
-                //     <p><strong>Total Barks Given:</strong> ${formatNumber(Math.floor(barkPowerData.totalBarksDonated))}</p>
-                //     <p><strong>Total Barks Received:</strong> ${formatNumber(Math.floor(barkPowerData.barksReceived))}</p>
-                //     <hr>
-                //     <div id="extraDetails" class="toggle-section">
-                //         <p><strong>---ADDITIONAL DETAILS---</strong></p>
-                //         <p><strong>Account ID:</strong> <a href="${hashscanUrl}" target="_blank">${accountId}</a></p>
-                //         <p><strong>$hBARK Balance (HODL) at time of last refill:</strong> ${formatNumber(Math.floor(hbarkBalanceHODL))}</p>
-                //         <p><strong>$hBARK Balance (LP) at time of last refill:</strong> ${formatNumber(Math.floor(hbarkBalanceLP))}</p>
-                //         <p><strong>Account Balance:</strong> ${formatNumber(accountBalance)}</p>
-                //         <p><strong>HODL Relative Barking Power:</strong> ${formatNumber(Math.floor(barkPowerData.hodlRelativeBarkingPower))}</p>
-                //         <p><strong>LP Relative Barking Power:</strong> ${formatNumber(Math.floor(barkPowerData.lpRelativeBarkingPower))}</p>
-                //     </div>
-                // `;
+                // Calculate Activity Level
+                const activityLevel = Math.floor((barkPowerData.totalBarksDonated / barkPowerData.barksReceived) * 100);
+                let activityClass = "";
+                let activityText = "";
 
-                  // Display the core information (with comma formatting for numbers)
-                  const output = `
+                // Determine class and corresponding text based on activity level
+                if (activityLevel < 25) {
+                    activityClass = 'activity-red-bold'; // bold red
+                    activityText = "Collecting Barks, but not Barking 👀";
+                } else if (activityLevel >= 25 && activityLevel < 50) {
+                    activityClass = 'activity-red'; // just red
+                    activityText = "Collecting Barks, and Barking a little 😬";
+                } else if (activityLevel >= 50 && activityLevel < 75) {
+                    activityClass = 'activity-orange'; // orange
+                    activityText = "Collecting Barks and Barking 🦜🏴‍☠️";
+                } else if (activityLevel >= 75 && activityLevel <= 100) {
+                    activityClass = 'activity-green'; // green
+                    activityText = " 🏴‍☠️🏴‍☠️Big Bark Energy 🏴‍☠️🏴‍☠️";
+                } else if (activityLevel > 100) {
+                    activityClass = 'activity-green-bold'; // bold green
+                    activityText = "🐶🗣️🏴‍☠️ A True Barkaneer! 🐶🗣️🏴‍☠️";
+                }
+
+                // Display the core information (with comma formatting for numbers)
+                const output = `
                   <p><strong>Bark Power Refilled:</strong> ${formatNumber(Math.floor(barkPowerData.todayAllocatedBarks))}</p>
                   <p><strong>Barking Power Remaining:</strong> ${formatNumber(Math.floor(barkPowerData.barkingPower))}</p>
                   <p><strong>Bark Power Used Today:</strong> ${formatNumber(Math.floor(barkPowerUsed))}</p>
                   <p><strong>Total Barks Given:</strong> ${formatNumber(Math.floor(barkPowerData.totalBarksDonated))}</p>
                   <p><strong>Total Barks Received:</strong> ${formatNumber(Math.floor(barkPowerData.barksReceived))}</p>
+                  <p><strong>Activity Level:</strong> <span class="${activityClass}">${formatNumber(activityLevel)}% - ${activityText}</span></p>
                   `;
 
                 document.getElementById("output").innerHTML = output;
 
-                // Now reset toggle button and hide details section (after the content is rendered)
-                //document.getElementById("toggleDetails").innerText = "Show More Details";
-                //document.getElementById("toggleDetails").style.display = "block"; // Show the toggle button
-                //document.getElementById("extraDetails").style.display = "none"; // Hide details section
-                
                 document.getElementById("progressContainer").style.display = "block"; // Show the progress bar container
 
                 // Update progress bar
@@ -138,6 +138,7 @@ async function checkBarkPower() {
         document.getElementById('error').textContent = "An error occurred while fetching data. Please ensure the account ID or Twitter handle is correct.";
     }
 }
+
 
 // Function to fetch and display the "Barks Remaining" leaderboard
 async function fetchBarksRemaining() {
