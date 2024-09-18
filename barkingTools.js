@@ -70,7 +70,7 @@ async function checkBarkPower() {
             const hashscanUrl = `https://hashscan.io/mainnet/account/${accountId}`;
 
             // Fetch barking power using the accountId
-            let barkingPowerUrl = `https://sure-angeline-piotrswierzy-b061c303.koyeb.app/barking-power/${accountId}`;
+            let barkingPowerUrl = `http://sure-angeline-piotrswierzy-b061c303.koyeb.app/barking-power/${accountId}`;
             response = await fetch(barkingPowerUrl);
             if (response.ok) {
                 let barkPowerData = await response.json();
@@ -82,6 +82,7 @@ async function checkBarkPower() {
                 // Calculate Bark Power used vs available
                 const barkPowerUsed = barkPowerData.todayAllocatedBarks - barkPowerData.barkingPower;
                 const barkPowerPercentageUsed = (barkPowerUsed / barkPowerData.todayAllocatedBarks) * 100;
+
 
                 // Step 3: Fetch the account balance from the additional API endpoint
                 const userHbarkBalanceURL = `https://mainnet-public.mirrornode.hedera.com/api/v1/tokens/0.0.5022567/balances?account.id=${accountId}`;
@@ -205,9 +206,29 @@ function toggleDetails() {
     }
 }
 
-// Function to update the progress bar
 function updateProgressBar(percentageUsed) {
     const progressBar = document.getElementById("progressBar");
-    progressBar.style.width = `${percentageUsed}%`;
-    progressBar.innerText = `${Math.floor(percentageUsed)}% Used`;
+
+    // Check if the element exists before updating it
+    if (!progressBar) {
+        console.error("Progress bar element not found.");
+        return;
+    }
+    
+    // Check if percentageUsed is NaN
+    if (isNaN(percentageUsed)) {
+        progressBar.innerText = "No Bark Power to Use";
+        progressBar.style.width = "100%";  // You can set this to whatever width you prefer
+        progressBar.style.backgroundColor = "#ff0000";  // Set to red for NaN
+    } else {
+        // Update progress bar with valid percentage and reset styles
+        progressBar.style.width = `${percentageUsed}%`;
+        progressBar.innerText = `${Math.floor(percentageUsed)}% Used`;
+        
+        // Reset the background color to default or desired color
+        progressBar.style.backgroundColor = "#00cc99";  // Example color, change to your desired one
+    }
 }
+
+
+
