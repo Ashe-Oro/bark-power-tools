@@ -24,7 +24,6 @@ function formatNumber(number) {
     return number.toLocaleString('en-US'); // Formats number with commas for the US
 }
 
-// Updated checkBarkPower function following the specified logic paths
 async function checkBarkPower() {
     // Clear previous output and error messages
     document.getElementById("output").innerHTML = "";
@@ -53,50 +52,79 @@ async function checkBarkPower() {
         if (isHederaAccount) {
             // Hedera Account Logic Path
             const accountId = userInput;
+            let accountLabel = "";
 
-            // Step 1: Fetch barking power from barking-power endpoint
+            console.log(`Processing Hedera Account ID: ${accountId}`);
+
+            // Step 1: Fetch $hbark token balance
+            console.log('Fetching $hbark token balance...');
+            let balanceUrl = `https://mainnet-public.mirrornode.hedera.com/api/v1/tokens/0.0.5022567/balances?account.id=${accountId}`;
+            let balanceResponse = await fetch(balanceUrl);
+            let balanceData = await balanceResponse.json();
+
+            let hbarkBalance = 0;
+            if (balanceData.balances && balanceData.balances.length > 0) {
+                hbarkBalance = balanceData.balances[0].balance;
+                accountLabel = "Current $HBARK holder";
+                console.log(`$hbark balance found: ${hbarkBalance}`);
+            } else {
+                hbarkBalance = 0;
+                accountLabel = "Account does not currently hold $HBARK";
+                console.log('No $hbark balance found.');
+            }
+            console.log(`Account Label after balance check: ${accountLabel}`);
+
+            // Step 2: Fetch barking power from barking-power endpoint
+            console.log('Fetching barking power data...');
             let barkingPowerUrl = `https://sure-angeline-piotrswierzy-b061c303.koyeb.app/barking-power/${accountId}`;
             let barkingPowerResponse = await fetch(barkingPowerUrl);
             let barkingPowerData = await barkingPowerResponse.json();
 
+            let barkPowerData = null;
+            let userData = null;
+
             if (barkingPowerData.code === "HBARK_USER_NOT_FOUND") {
-                // Account is not an $HBARK holder
-                document.getElementById('error').textContent = "Account is not an $HBARK holder.";
+                console.log('No barking power data found for account.');
+                // Account has not been allocated any Bark Power
+                if (hbarkBalance === 0) {
+                    accountLabel = "Account does not currently hold $HBARK and has not been allocated Bark Power";
+                } else {
+                    accountLabel = "$HBARK Holder, but has not been allocated Bark Power";
+                }
+                console.log(`Account Label after barking power check: ${accountLabel}`);
+
+                // Display the balance and label without showing error messages
+                displayBarkPowerData(null, accountLabel, null, hbarkBalance, accountId);
                 return;
             } else {
-                // Valid $HBARK holder
-                let barkPowerData = barkingPowerData;
+                // Has held $hbark for at least one refill. Fetch barking power data
+                console.log('Barking power data found.');
+                barkPowerData = barkingPowerData;
 
-                // Step 2: Attempt to fetch from users endpoint
+                // Step 3: Attempt to fetch from users endpoint
+                console.log('Fetching user data from users endpoint...');
                 let userUrl = `https://sure-angeline-piotrswierzy-b061c303.koyeb.app/users/${accountId}`;
                 let userResponse = await fetch(userUrl);
-                let userData = await userResponse.json();
-
-                let accountLabel = "$HBARK holder";
+                userData = await userResponse.json();
 
                 if (userData.code === "HBARK_USER_NOT_FOUND") {
-                    accountLabel = "$HBARK Holder only";
-                    userData = null; // No user data available
+                    userData = null;
+                    accountLabel = "Holds $HBARK and has been refilled with Bark Power";
+                    console.log('User data not found in users endpoint.');
                 } else {
+                    console.log('User data found.');
                     if (userData.signedTermMessage) {
                         accountLabel = "Signed Terms";
                     } else if (userData.twitterHandle) {
                         accountLabel = "Twitter Account Linked";
+                    } else {
+                        accountLabel = "Holds $HBARK and has been refilled with Bark Power";
                     }
                 }
-
-                // Step 3: Fetch $hbark token balance
-                let balanceUrl = `https://mainnet-public.mirrornode.hedera.com/api/v1/tokens/0.0.5022567/balances?account.id=${accountId}`;
-                let balanceResponse = await fetch(balanceUrl);
-                let balanceData = await balanceResponse.json();
-
-                let hbarkBalance = 0;
-                if (balanceData.balances && balanceData.balances.length > 0) {
-                    hbarkBalance = balanceData.balances[0].balance;
-                }
+                console.log(`Account Label after user data check: ${accountLabel}`);
 
                 // Pass hbarkBalance to display function
-                displayBarkPowerData(barkPowerData, accountLabel, userData, hbarkBalance);
+                displayBarkPowerData(barkPowerData, accountLabel, userData, hbarkBalance, accountId);
                 return;
             }
         } else {
@@ -108,16 +136,26 @@ async function checkBarkPower() {
                 return;
             }
 
+            console.log(`Processing Twitter Handle: ${twitterHandle}`);
+
             // Step 1: Fetch from users/twitter endpoint
+            console.log('Fetching user data from users/twitter endpoint...');
             let userUrl = `https://sure-angeline-piotrswierzy-b061c303.koyeb.app/users/twitter/${twitterHandle}`;
             let userResponse = await fetch(userUrl);
             let userData = await userResponse.json();
 
+            let accountLabel = "";
+            let accountId = null;
+            let hbarkBalance = 0;
+            let barkPowerData = null;
+
             if (userData.code === "HBARK_USER_NOT_FOUND") {
                 // User has not linked a Hedera account
-                let accountLabel = "Has not linked with Hedera Account";
+                accountLabel = "Has not linked with Hedera Account";
+                console.log('User has not linked a Hedera account.');
 
-                // Step 2: Fetch barksReceived from leaderboard
+                // Fetch barksReceived from leaderboard
+                console.log('Fetching barksReceived from leaderboard...');
                 let leaderboardUrl = `https://sure-angeline-piotrswierzy-b061c303.koyeb.app/barking-power/leaderboard/1000`;
                 let leaderboardResponse = await fetch(leaderboardUrl);
                 let leaderboardData = await leaderboardResponse.json();
@@ -126,47 +164,64 @@ async function checkBarkPower() {
                 let found = false;
                 for (let item of leaderboardData) {
                     if (item.twitterHandle && item.twitterHandle.toLowerCase() === twitterHandle.toLowerCase()) {
-                        let barkPowerData = {
+                        barkPowerData = {
                             barksReceived: item.barksReceived
                         };
-                        displayBarkPowerData(barkPowerData, accountLabel);
                         found = true;
+                        console.log('Twitter handle found in leaderboard.');
                         break;
                     }
                 }
+
                 if (!found) {
+                    console.log('Twitter handle not found in leaderboard.');
                     document.getElementById('error').textContent = "No barks received for this Twitter handle.";
+                    return;
                 }
+
+                displayBarkPowerData(barkPowerData, accountLabel, null, null, null);
                 return;
             } else {
                 // User data exists
-                if (userData.accountId && userData.isVerified && userData.signedTermMessage) {
-                    // Fully linked account
-                    let accountLabel = "Fully linked account";
-                    let accountId = userData.accountId;
+                console.log('User data found for Twitter handle.');
+                accountId = userData.accountId;
+
+                // Check if the user has fully linked a Hedera account
+                if (accountId && userData.isVerified && userData.signedTermMessage) {
+                    accountLabel = "Fully linked account";
+                    console.log('User has a fully linked account.');
 
                     // Fetch barking power data using accountId
+                    console.log('Fetching barking power data using accountId...');
                     let barkingPowerUrl = `https://sure-angeline-piotrswierzy-b061c303.koyeb.app/barking-power/${accountId}`;
                     let barkingPowerResponse = await fetch(barkingPowerUrl);
                     let barkingPowerData = await barkingPowerResponse.json();
 
+                    barkPowerData = barkingPowerData;
+
                     // Fetch $hbark token balance
+                    console.log('Fetching $hbark token balance using accountId...');
                     let balanceUrl = `https://mainnet-public.mirrornode.hedera.com/api/v1/tokens/0.0.5022567/balances?account.id=${accountId}`;
                     let balanceResponse = await fetch(balanceUrl);
                     let balanceData = await balanceResponse.json();
 
-                    let hbarkBalance = 0;
                     if (balanceData.balances && balanceData.balances.length > 0) {
                         hbarkBalance = balanceData.balances[0].balance;
+                        console.log(`$hbark balance found: ${hbarkBalance}`);
+                    } else {
+                        hbarkBalance = 0;
+                        console.log('No $hbark balance found.');
                     }
 
-                    displayBarkPowerData(barkingPowerData, accountLabel, userData, hbarkBalance);
+                    displayBarkPowerData(barkPowerData, accountLabel, userData, hbarkBalance, accountId);
                     return;
                 } else {
                     // User has not fully linked a Hedera account
-                    let accountLabel = "Has not linked with Hedera Account";
+                    accountLabel = "Has not fully linked a Hedera Account";
+                    console.log('User has not fully linked a Hedera account.');
 
                     // Fetch barksReceived from leaderboard
+                    console.log('Fetching barksReceived from leaderboard...');
                     let leaderboardUrl = `https://sure-angeline-piotrswierzy-b061c303.koyeb.app/barking-power/leaderboard/1000`;
                     let leaderboardResponse = await fetch(leaderboardUrl);
                     let leaderboardData = await leaderboardResponse.json();
@@ -175,32 +230,43 @@ async function checkBarkPower() {
                     let found = false;
                     for (let item of leaderboardData) {
                         if (item.twitterHandle && item.twitterHandle.toLowerCase() === twitterHandle.toLowerCase()) {
-                            let barkPowerData = {
+                            barkPowerData = {
                                 barksReceived: item.barksReceived
                             };
-                            displayBarkPowerData(barkPowerData, accountLabel);
                             found = true;
+                            console.log('Twitter handle found in leaderboard.');
                             break;
                         }
                     }
+
                     if (!found) {
+                        console.log('Twitter handle not found in leaderboard.');
                         document.getElementById('error').textContent = "No barks received for this Twitter handle.";
+                        return;
                     }
+
+                    displayBarkPowerData(barkPowerData, accountLabel, userData, null, null);
                     return;
                 }
             }
         }
     } catch (error) {
+        console.error('An error occurred:', error);
         document.getElementById('error').textContent = `An error occurred: ${error.message}. Please ensure the account ID or Twitter handle is correct and try again.`;
     }
 }
 
-// Updated displayBarkPowerData function to handle the new logic and data
-function displayBarkPowerData(barkPowerData, accountLabel, userData = null, hbarkBalance = null) {
+
+
+
+
+function displayBarkPowerData(barkPowerData, accountLabel, userData = null, hbarkBalance = null, accountId = null) {
+    console.log(`Displaying data with accountLabel: ${accountLabel}`);
     let output = `<p><strong>Account Label:</strong> ${accountLabel}</p>`;
 
-    if (accountLabel === "$HBARK holder" || accountLabel === "$HBARK Holder only" || accountLabel === "Signed Terms" || accountLabel === "Twitter Account Linked" || accountLabel === "Fully linked account") {
-        // For $HBARK holder accounts, display barking power details
+    if (barkPowerData && (barkPowerData.todayAllocatedBarks !== undefined)) {
+        console.log('Displaying barking power details.');
+        // Existing logic for displaying barking power details
         const barkPowerUsed = barkPowerData.todayAllocatedBarks - barkPowerData.barkingPower;
         const barkPowerPercentageUsed = (barkPowerUsed / barkPowerData.todayAllocatedBarks) * 100;
 
@@ -212,12 +278,13 @@ function displayBarkPowerData(barkPowerData, accountLabel, userData = null, hbar
             <p><strong>Total Barks Received:</strong> ${formatNumber(Math.floor(barkPowerData.barksReceived))}</p>
         `;
 
-        // Include More Details section for all $HBARK holders
-        const hashscanUrl = `https://hashscan.io/mainnet/account/${barkPowerData.accountId}`;
+        // Include More Details section
+        const accountIdToUse = barkPowerData.accountId || accountId;
+        const hashscanUrl = `https://hashscan.io/mainnet/account/${accountIdToUse}`;
         output += `
             <hr>
             <div id="extraDetails" class="toggle-section">
-                <p><strong>Account ID:</strong> <a href="${hashscanUrl}" target="_blank">${barkPowerData.accountId}</a></p>
+                <p><strong>Account ID:</strong> <a href="${hashscanUrl}" target="_blank">${accountIdToUse}</a></p>
         `;
 
         // Include Twitter handle if available
@@ -226,7 +293,7 @@ function displayBarkPowerData(barkPowerData, accountLabel, userData = null, hbar
         }
 
         // Include $hbark Token Balance
-        output += `<p><strong>$hbark Token Balance:</strong> ${formatNumber(hbarkBalance)}</p>`;
+        output += `<p><strong>$hbark Token Balance:</strong> ${hbarkBalance !== null ? formatNumber(hbarkBalance) : 'N/A'}</p>`;
 
         // Include hodlRelativeBarkingPower and lpRelativeBarkingPower
         output += `
@@ -254,17 +321,55 @@ function displayBarkPowerData(barkPowerData, accountLabel, userData = null, hbar
         }
 
         updateProgressBar(barkPowerPercentageUsed);
-    } else if (accountLabel === "Has not linked with Hedera Account") {
-        // For users who have not linked a Hedera account but can receive barks
-        output += `<p>This user can receive Barks but cannot give them since they do not own $hBARK or have a linked Hedera account.</p>`;
-        if (barkPowerData.barksReceived !== undefined) {
-            output += `<p><strong>Total Barks Received:</strong> ${formatNumber(Math.floor(barkPowerData.barksReceived))}</p>`;
-        } else {
-            output += `<p><strong>Total Barks Received:</strong> 0</p>`;
+    } else if (barkPowerData && barkPowerData.barksReceived !== undefined) {
+        console.log('Displaying barks received data for unlinked user.');
+        // For users who have not linked a Hedera account but have received barks
+        //output += `<p>This user can receive Barks but cannot give them since they do not own $hBARK or have a linked Hedera account.</p>`;
+        output += `<p><strong>Total Barks Received:</strong> ${formatNumber(barkPowerData.barksReceived)}</p>`;
+        document.getElementById("output").innerHTML = output;
+    } else {
+        console.log('Displaying basic information without barking power data.');
+        // When barkPowerData is not available or missing expected properties
+        // Display $hbark Token Balance if available
+        if (hbarkBalance !== null) {
+            output += `<p><strong>$hbark Token Balance:</strong> ${formatNumber(hbarkBalance)}</p>`;
         }
+
+        // Include Account ID if available
+        if (accountId) {
+            const hashscanUrl = `https://hashscan.io/mainnet/account/${accountId}`;
+            output += `
+                <hr>
+                <div id="extraDetails" class="toggle-section">
+                    <p><strong>Account ID:</strong> <a href="${hashscanUrl}" target="_blank">${accountId}</a></p>
+            `;
+        }
+
+        // Include Twitter handle if available
+        if (userData && userData.twitterHandle) {
+            output += `<p><strong>Twitter Handle:</strong> @${userData.twitterHandle}</p>`;
+        }
+
+        if (accountId || (userData && userData.twitterHandle)) {
+            output += `</div>`;
+
+            const toggleDetailsElement = document.getElementById("toggleDetails");
+            if (toggleDetailsElement) {
+                toggleDetailsElement.style.display = "block"; // Show the toggle button
+            }
+
+            const extraDetailsElement = document.getElementById("extraDetails");
+            if (extraDetailsElement) {
+                extraDetailsElement.style.display = "none"; // Hide details section initially
+            }
+        }
+
         document.getElementById("output").innerHTML = output;
     }
 }
+
+
+
 
 // Function to fetch and display the "Barks Remaining" leaderboard
 async function fetchBarksRemaining() {
