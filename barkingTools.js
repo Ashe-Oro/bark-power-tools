@@ -206,6 +206,16 @@ function displayBarkPowerData(barkPowerData, accountLabel, userData = null, hbar
             progressContainerElement.style.display = "block"; // Show progress bar container
         }
 
+        const clearSearchElement = document.getElementById("clearSearch");
+        if (clearSearchElement) {
+            clearSearchElement.style.display = "block"; // Show progress bar container
+        }
+
+        const outputElement = document.getElementById("output");
+        if (outputElement) {
+            outputElement.style.display = "block";
+        }
+
         updateProgressBar(barkPowerPercentageUsed);
     } else if (barkPowerData && barkPowerData.barksReceived !== undefined) {
         console.log('Displaying barks received data for unlinked user.');
@@ -277,8 +287,18 @@ async function fetchBarksRemaining() {
 
                 // Create the Twitter User (or Account ID) cell
                 let twitterUserCell = document.createElement('td');
+                twitterUserCell.style.cursor = 'pointer';
                 twitterUserCell.textContent = displayName;
-
+    
+                twitterUserCell.addEventListener('click', () => {
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                    let twitterInput = document.getElementById('twitterHandle');
+                    twitterInput.value = displayName;
+    
+                    let submitButton = document.getElementById('checkBarkPower');
+                    submitButton.click();
+                });
+                
                 // Create the Bark Power Remaining cell (with number formatting)
                 let barkPowerRemainingCell = document.createElement('td');
                 barkPowerRemainingCell.textContent = item.barkingPower.toLocaleString('en-US'); // format number with commas
@@ -322,6 +342,31 @@ function toggleDetails() {
             extraDetails.style.display = "none";
             toggleDetailsButton.innerText = "Show More Details";
         }
+    }
+}
+
+function clearSearch() {
+    // Hide elements only if they exist
+    const toggleDetailsElement = document.getElementById("toggleDetails");
+    if (toggleDetailsElement) {
+        toggleDetailsElement.style.display = "none";
+    }
+    const progressContainerElement = document.getElementById("progressContainer");
+    if (progressContainerElement) {
+        progressContainerElement.style.display = "none";
+    }
+    // Hide elements only if they exist
+    const clearSearchElement = document.getElementById("clearSearch");
+    if (clearSearchElement) {
+        clearSearchElement.style.display = "none";
+    }
+    const twitterHandleElement = document.getElementById("twitterHandle");
+    if (twitterHandleElement) {
+        twitterHandleElement.value = "";
+    }
+    const outputElement = document.getElementById("output");
+    if (outputElement) {
+        outputElement.style.display = "none";
     }
 }
 

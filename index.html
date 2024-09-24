@@ -237,7 +237,7 @@
         <!-- Bark Power Section -->
         <h2>User Barking Stats</h2>
         <input type="text" id="twitterHandle" placeholder="Enter Twitter Handle or Hedera Account ID" value="" />
-        <button onclick="checkBarkPower()">🐶 Submit 🐶</button>
+        <button id="checkBarkPower" onclick="checkBarkPower()">🐶 Search 🐶</button>
 
         <!-- Error Message Display -->
         <div class="error" id="error"></div>
@@ -255,6 +255,7 @@
 
         <!-- Button to toggle additional details -->
         <button class="toggle-button" id="toggleDetails" onclick="toggleDetails()" style="display: none;">Show More Details</button>
+        <button id="clearSearch" onclick="clearSearch()" style="display: none;">Clear Search</button>
     </div>
 
     <!-- Barks Remaining Leaderboard Section -->
