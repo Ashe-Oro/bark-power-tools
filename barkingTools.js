@@ -74,6 +74,17 @@ class BarkView {
     static clearOutput() {
         document.getElementById("output").innerHTML = "";
         document.getElementById("error").innerHTML = "";
+
+
+        const extraDetails = document.getElementById("extraDetails");
+        if (extraDetails) {
+            extraDetails.style.display = "none";
+        }
+
+        const toggleDetailsButton = document.getElementById("toggleDetails");
+        if (toggleDetailsButton) {
+            toggleDetailsButton.innerText = "Show More Details";
+        }
     }
 
     static displayErrorMessage(error, message) {
@@ -493,4 +504,8 @@ function toggleDetails() {
 
 function clearSearch() {
     BarkView.clearSearch();
+}
+
+async function checkBarkPower() {
+    await BarkManager.checkBarkPower();
 }
