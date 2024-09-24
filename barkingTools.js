@@ -130,6 +130,15 @@ async function checkBarkPower() {
     if (progressContainerElement) {
         progressContainerElement.style.display = "none";
     }
+    // Hide elements only if they exist
+    const clearSearchElement = document.getElementById("clearSearch");
+    if (clearSearchElement) {
+        clearSearchElement.style.display = "none";
+    }
+    const outputElement = document.getElementById("output");
+    if (outputElement) {
+        outputElement.style.display = "none";
+    }
 
     // Get the user input (could be a Twitter handle or accountId)
     let userInput = document.getElementById('twitterHandle').value;
@@ -392,6 +401,16 @@ function displayBarkPowerData(barkPowerData, accountLabel, userData = null, hbar
             progressContainerElement.style.display = "block"; // Show progress bar container
         }
 
+        const clearSearchElement = document.getElementById("clearSearch");
+        if (clearSearchElement) {
+            clearSearchElement.style.display = "block"; // Show progress bar container
+        }
+
+        const outputElement = document.getElementById("output");
+        if (outputElement) {
+            outputElement.style.display = "block";
+        }
+
         updateProgressBar(barkPowerPercentageUsed);
     } else if (barkPowerData && barkPowerData.barksReceived !== undefined) {
         console.log('Displaying barks received data for unlinked user.');
@@ -440,7 +459,30 @@ function displayBarkPowerData(barkPowerData, accountLabel, userData = null, hbar
     }
 }
 
-
+function clearSearch() {
+    // Hide elements only if they exist
+    const toggleDetailsElement = document.getElementById("toggleDetails");
+    if (toggleDetailsElement) {
+        toggleDetailsElement.style.display = "none";
+    }
+    const progressContainerElement = document.getElementById("progressContainer");
+    if (progressContainerElement) {
+        progressContainerElement.style.display = "none";
+    }
+    // Hide elements only if they exist
+    const clearSearchElement = document.getElementById("clearSearch");
+    if (clearSearchElement) {
+        clearSearchElement.style.display = "none";
+    }
+    const twitterHandleElement = document.getElementById("twitterHandle");
+    if (twitterHandleElement) {
+        twitterHandleElement.value = "";
+    }
+    const outputElement = document.getElementById("output");
+    if (outputElement) {
+        outputElement.style.display = "none";
+    }
+}
 
 
 // Function to fetch and display the "Barks Remaining" leaderboard
@@ -467,7 +509,17 @@ async function fetchBarksRemaining() {
 
             // Create the Twitter User (or Account ID) cell
             let twitterUserCell = document.createElement('td');
+            twitterUserCell.style.cursor = 'pointer';
             twitterUserCell.textContent = displayName;
+
+            twitterUserCell.addEventListener('click', () => {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                let twitterInput = document.getElementById('twitterHandle');
+                twitterInput.value = displayName;
+
+                let submitButton = document.getElementById('checkBarkPower');
+                submitButton.click();
+            });
 
             // Create the Bark Power Remaining cell (with number formatting)
             let barkPowerRemainingCell = document.createElement('td');
