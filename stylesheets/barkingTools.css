@@ -1,7 +1,7 @@
 /* Body styling with background image */
 body {
     font-family: 'Arial', sans-serif;
-    background: url('./images/bark-calc-widget-bkgd-small.png') no-repeat center center fixed;
+    background: url('../images/bark-calc-widget-bkgd-small.png') no-repeat center center fixed;
     background-size: cover;
     color: #333;
     margin: 0;
