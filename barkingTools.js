@@ -191,7 +191,7 @@ async function checkBarkPower() {
 
                 // Step 3: Attempt to fetch from users endpoint
                 console.log('Fetching user data from users endpoint...');
-                let userData = BarkApi.fetchUserData(accountId);
+                let userData = await BarkApi.fetchUserData(accountId);
 
                 if (userData.code === "HBARK_USER_NOT_FOUND") {
                     userData = null;
@@ -226,7 +226,7 @@ async function checkBarkPower() {
 
             // Step 1: Fetch from users/twitter endpoint
             console.log('Fetching user data from users/twitter endpoint...');
-            let userData = BarkApi.fetchTwitterData(twitterHandle);
+            let userData = await BarkApi.fetchTwitterData(twitterHandle);
 
             let accountLabel = "";
             let accountId = null;
