@@ -261,17 +261,33 @@ class BarkView {
         }
     }
 
-    // Method to show the spinner
-    static showSpinner() {
-        const spinner = document.getElementById("spinner");
+    // Function to show the account spinner
+    static showAccountSpinner() {
+        const spinner = document.getElementById("account-spinner");
         if (spinner) {
             spinner.style.display = "block";
         }
     }
 
-    // Method to hide the spinner
-    static hideSpinner() {
-        const spinner = document.getElementById("spinner");
+    // Function to hide the account spinner
+    static hideAccountSpinner() {
+        const spinner = document.getElementById("account-spinner");
+        if (spinner) {
+            spinner.style.display = "none";
+        }
+    }
+
+    // Function to show the leaderboard spinner
+    static showLeaderboardSpinner() {
+        const spinner = document.getElementById("leaderboard-spinner");
+        if (spinner) {
+            spinner.style.display = "block";
+        }
+    }
+
+    // Function to hide the leaderboard spinner
+    static hideLeaderboardSpinner() {
+        const spinner = document.getElementById("leaderboard-spinner");
         if (spinner) {
             spinner.style.display = "none";
         }
@@ -281,6 +297,11 @@ class BarkView {
     static async fetchBarksRemaining() {
         const leaderboardTable = document.getElementById('barksRemainingLeaderboardBody');
         const leaderboard = document.getElementById('barksRemainingLeaderboard'); // Get the table element
+
+        // Show the leaderboard spinner before fetching data
+        BarkView.showLeaderboardSpinner();
+        // Hide the leaderboard table while loading
+        leaderboard.style.display = 'none';
 
         try {
             let data = await BarkApi.fetchBarkingPowerLeaderboard();
@@ -295,13 +316,15 @@ class BarkView {
 
             // Loop through the data and populate the leaderboard
             data.forEach((item) => {
-                this.addUserCell(item, leaderboardTable);
+                BarkView.addUserCell(item, leaderboardTable);
             });
 
             // Show the leaderboard after the data is loaded
             leaderboard.style.display = 'table'; // Ensures the table is visible
         } catch (error) {
             console.error('Error occurred while fetching barks remaining data:', error);
+        } finally {
+            BarkView.hideLeaderboardSpinner();
         }
     }
 
@@ -372,7 +395,7 @@ class BarkView {
 class BarkManager {
     static async checkBarkPower() {
         BarkView.clearOutput();
-        BarkView.showSpinner();
+        BarkView.showAccountSpinner();
 
         let userInput = BarkManager.getUserInput();
         let isHederaAccountInput = BarkUtils.isAccountId(userInput);
@@ -386,7 +409,7 @@ class BarkManager {
         } catch (error) {
             BarkView.displayErrorMessage(error, "Please ensure the account ID or Twitter handle is correct and try again.");
         } finally {
-            BarkView.hideSpinner();  // Hide the spinner after processing is done
+            BarkView.hideAccountSpinner();  // Hide the spinner after processing is done
         }
     }
 
