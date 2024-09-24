@@ -343,11 +343,11 @@ function displayBarkPowerData(barkPowerData, accountLabel, userData = null, hbar
         const barkPowerPercentageUsed = (barkPowerUsed / barkPowerData.todayAllocatedBarks) * 100;
 
         output += `
-            <p><strong>Bark Power Refilled:</strong> ${barkUtils.formatNumber(Math.floor(barkPowerData.todayAllocatedBarks))}</p>
-            <p><strong>Barking Power Remaining:</strong> ${barkUtils.formatNumber(Math.floor(barkPowerData.barkingPower))}</p>
-            <p><strong>Bark Power Used Today:</strong> ${barkUtils.formatNumber(Math.floor(barkPowerUsed))}</p>
-            <p><strong>Total Barks Given:</strong> ${barkUtils.formatNumber(Math.floor(barkPowerData.totalBarksDonated))}</p>
-            <p><strong>Total Barks Received:</strong> ${barkUtils.formatNumber(Math.floor(barkPowerData.barksReceived))}</p>
+            <p><strong>Bark Power Refilled:</strong> ${BarkUtils.formatNumber(Math.floor(barkPowerData.todayAllocatedBarks))}</p>
+            <p><strong>Barking Power Remaining:</strong> ${BarkUtils.formatNumber(Math.floor(barkPowerData.barkingPower))}</p>
+            <p><strong>Bark Power Used Today:</strong> ${BarkUtils.formatNumber(Math.floor(barkPowerUsed))}</p>
+            <p><strong>Total Barks Given:</strong> ${BarkUtils.formatNumber(Math.floor(barkPowerData.totalBarksDonated))}</p>
+            <p><strong>Total Barks Received:</strong> ${BarkUtils.formatNumber(Math.floor(barkPowerData.barksReceived))}</p>
         `;
 
         // Include More Details section
@@ -369,8 +369,8 @@ function displayBarkPowerData(barkPowerData, accountLabel, userData = null, hbar
 
         // Include hodlRelativeBarkingPower and lpRelativeBarkingPower
         output += `
-                <p><strong>$hBARK Balance (HODL) at time of last refill:</strong> ${barkUtils.formatNumber(Math.floor(barkPowerData.hodlRelativeBarkingPower / 2))}</p>
-                <p><strong>$hBARK Balance (LP) at time of last refill:</strong> ${barkUtils.formatNumber(Math.floor(barkPowerData.lpRelativeBarkingPower / 3))}</p>
+                <p><strong>$hBARK Balance (HODL) at time of last refill:</strong> ${BarkUtils.formatNumber(Math.floor(barkPowerData.hodlRelativeBarkingPower / 2))}</p>
+                <p><strong>$hBARK Balance (LP) at time of last refill:</strong> ${BarkUtils.formatNumber(Math.floor(barkPowerData.lpRelativeBarkingPower / 3))}</p>
             </div>
         `;
 
@@ -397,14 +397,14 @@ function displayBarkPowerData(barkPowerData, accountLabel, userData = null, hbar
         console.log('Displaying barks received data for unlinked user.');
         // For users who have not linked a Hedera account but have received barks
         //output += `<p>This user can receive Barks but cannot give them since they do not own $hBARK or have a linked Hedera account.</p>`;
-        output += `<p><strong>Total Barks Received:</strong> ${barkUtils.formatNumber(barkPowerData.barksReceived)}</p>`;
+        output += `<p><strong>Total Barks Received:</strong> ${BarkUtils.formatNumber(barkPowerData.barksReceived)}</p>`;
         document.getElementById("output").innerHTML = output;
     } else {
         console.log('Displaying basic information without barking power data.');
         // When barkPowerData is not available or missing expected properties
         // Display $hbark Token Balance if available
         if (hbarkBalance !== null) {
-            output += `<p><strong>$hbark Token Balance:</strong> ${barkUtils.formatNumber(hbarkBalance)}</p>`;
+            output += `<p><strong>$hbark Token Balance:</strong> ${BarkUtils.formatNumber(hbarkBalance)}</p>`;
         }
 
         // Include Account ID if available
