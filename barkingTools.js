@@ -1,6 +1,13 @@
 // Global flag for toggling
 let detailsVisible = false;
 
+BASE_URLS = {
+    mirrorNode: 'https://mainnet-public.mirrornode.hedera.com/api/v1/tokens/0.0.5022567',
+    barkingPower: 'https://sure-angeline-piotrswierzy-b061c303.koyeb.app/barking-power',
+    users: 'https://sure-angeline-piotrswierzy-b061c303.koyeb.app/users',
+    leaderboard: 'https://sure-angeline-piotrswierzy-b061c303.koyeb.app/barking-power/leaderboard',
+}
+
 class BarkUtils {
     // Method to sanitize the Twitter handle
     static sanitizeTwitterHandle(handle) {
@@ -26,47 +33,36 @@ class BarkUtils {
 }
 
 class BarkApi {
-    constructor() {
-        this.baseUrls = {
-            mirrorNode: 'https://mainnet-public.mirrornode.hedera.com/api/v1/tokens/0.0.5022567',
-            barkingPower: 'https://sure-angeline-piotrswierzy-b061c303.koyeb.app/barking-power',
-            users: 'https://sure-angeline-piotrswierzy-b061c303.koyeb.app/users',
-            leaderboard: 'https://sure-angeline-piotrswierzy-b061c303.koyeb.app/barking-power/leaderboard',
-        };
-    }
-
-    async fetchBalance(accountId) {
-        const url = `${this.baseUrls.mirrorNode}/balances?account.id=${accountId}`;
+    static async fetchBalance(accountId) {
+        const url = `${BASE_URLS.mirrorNode}/balances?account.id=${accountId}`;
         const response = await fetch(url);
         return await response.json();
     }
 
-    async fetchBarkingPower(accountId) {
-        const url = `${this.baseUrls.barkingPower}/${accountId}`;
+    static async fetchBarkingPower(accountId) {
+        const url = `${BASE_URLS.barkingPower}/${accountId}`;
         const response = await fetch(url);
         return await response.json();
     }
 
-    async fetchUserByAccountId(accountId) {
-        const url = `${this.baseUrls.users}/${accountId}`;
+    static async fetchUserByAccountId(accountId) {
+        const url = `${BASE_URLS.users}/${accountId}`;
         const response = await fetch(url);
         return await response.json();
     }
 
-    async fetchUserByTwitter(twitterHandle) {
-        const url = `${this.baseUrls.users}/twitter/${twitterHandle}`;
+    static async fetchUserByTwitter(twitterHandle) {
+        const url = `${BASE_URLS.users}/twitter/${twitterHandle}`;
         const response = await fetch(url);
         return await response.json();
     }
 
-    async fetchLeaderboard(limit = 1000) {
-        const url = `${this.baseUrls.leaderboard}/${limit}`;
+    static async fetchLeaderboard(limit = 1000) {
+        const url = `${BASE_URLS.leaderboard}/${limit}`;
         const response = await fetch(url);
         return await response.json();
     }
 }
-
-const barkApi = new BarkApi();
 
 async function checkBarkPower() {
     document.getElementById("output").innerHTML = "";
@@ -84,39 +80,69 @@ async function checkBarkPower() {
         if (isHederaAccount) {
             const accountId = userInput;
 
-            const balanceData = await barkApi.fetchBalance(accountId);
-            hbarkBalance = balanceData.balances?.[0]?.balance || 0;
-            accountLabel = hbarkBalance ? "Current $HBARK holder" : "Account does not currently hold $HBARK";
+            console.log(`Processing Hedera Account ID: ${accountId}`);
 
-            const barkingPowerData = await barkApi.fetchBarkingPower(accountId);
+            // Step 1: Fetch $hbark token balance
+            const balanceData = await BarkApi.fetchBalance(accountId);
+            hbarkBalance = balanceData.balances?.[0]?.balance || 0;
+            if (hbarkBalance > 0) {
+                accountLabel = "Current $HBARK holder";
+                console.log(`$hbark balance found: ${hbarkBalance}`);
+            } else {
+                accountLabel = "Account does not currently hold $HBARK";
+                console.log('No $hbark balance found.');
+            }
+            console.log(`Account Label after balance check: ${accountLabel}`);
+
+            // Step 2: Fetch barking power from barking-power endpoint
+            console.log('Fetching barking power data...');
+            const barkingPowerData = await BarkApi.fetchBarkingPower(accountId);
+
             if (barkingPowerData.code === "HBARK_USER_NOT_FOUND") {
-                if (!hbarkBalance) {
+                console.log('No barking power data found for account.');
+                // Account has not been allocated any Bark Power
+                if (hbarkBalance === 0) {
                     accountLabel = "Account does not currently hold $HBARK and has not been allocated Bark Power";
+                } else {
+                    accountLabel = "$HBARK Holder, but has not been allocated Bark Power";
                 }
+                console.log(`Account Label after barking power check: ${accountLabel}`);
+
+                // Display the balance and label without showing error messages
                 displayBarkPowerData(null, accountLabel, null, hbarkBalance, accountId);
                 return;
             }
 
+            // Has held $hbark for at least one refill. Fetch barking power data
+            console.log('Barking power data found.');
             barkPowerData = barkingPowerData;
 
-            userData = await barkApi.fetchUserByAccountId(accountId);
+            // Step 3: Attempt to fetch from users endpoint
+            console.log('Fetching user data from users endpoint...');
+            userData = await BarkApi.fetchUserByAccountId(accountId);
+
             if (userData.code === "HBARK_USER_NOT_FOUND") {
-                accountLabel = "$HBARK Holder, but has not been allocated Bark Power";
+                userData = null;
+                accountLabel = "Holds $HBARK and has been refilled with Bark Power";
+                console.log('User data not found in users endpoint.');
             } else {
+                console.log('User data found.');
                 accountLabel = userData.signedTermMessage
                     ? "Signed Terms"
                     : userData.twitterHandle
                     ? "Twitter Account Linked"
                     : "$HBARK Holder, allocated Bark Power";
             }
+            console.log(`Account Label after user data check: ${accountLabel}`);
+
             displayBarkPowerData(barkPowerData, accountLabel, userData, hbarkBalance, accountId);
         } else {
             const twitterHandle = BarkUtils.sanitizeTwitterHandle(userInput);
-            const userData = await barkApi.fetchUserByTwitter(twitterHandle);
+            const userData = await BarkApi.fetchUserByTwitter(twitterHandle);
 
             if (userData.code === "HBARK_USER_NOT_FOUND") {
                 accountLabel = "Has not linked with Hedera Account";
-                const leaderboardData = await barkApi.fetchLeaderboard();
+                const leaderboardData = await BarkApi.fetchLeaderboard();
                 const leaderboardItem = leaderboardData.find(item => item.twitterHandle?.toLowerCase() === twitterHandle.toLowerCase());
 
                 if (leaderboardItem) {
@@ -127,10 +153,10 @@ async function checkBarkPower() {
                 }
             } else {
                 const accountId = userData.accountId;
-                const barkingPowerData = await barkApi.fetchBarkingPower(accountId);
+                const barkingPowerData = await BarkApi.fetchBarkingPower(accountId);
                 barkPowerData = barkingPowerData;
 
-                const balanceData = await barkApi.fetchBalance(accountId);
+                const balanceData = await BarkApi.fetchBalance(accountId);
                 hbarkBalance = balanceData.balances?.[0]?.balance || 0;
                 accountLabel = userData.isVerified && userData.signedTermMessage ? "Fully linked account" : "Has not fully linked a Hedera Account";
                 
