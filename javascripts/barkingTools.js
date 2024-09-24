@@ -261,6 +261,22 @@ class BarkView {
         }
     }
 
+    // Method to show the spinner
+    static showSpinner() {
+        const spinner = document.getElementById("spinner");
+        if (spinner) {
+            spinner.style.display = "block";
+        }
+    }
+
+    // Method to hide the spinner
+    static hideSpinner() {
+        const spinner = document.getElementById("spinner");
+        if (spinner) {
+            spinner.style.display = "none";
+        }
+    }
+
     // Function to fetch and display the "Barks Remaining" leaderboard
     static async fetchBarksRemaining() {
         const leaderboardTable = document.getElementById('barksRemainingLeaderboardBody');
@@ -279,7 +295,7 @@ class BarkView {
 
             // Loop through the data and populate the leaderboard
             data.forEach((item) => {
-                BarkView.addUserCell(item, leaderboardTable);
+                this.addUserCell(item, leaderboardTable);
             });
 
             // Show the leaderboard after the data is loaded
@@ -356,6 +372,7 @@ class BarkView {
 class BarkManager {
     static async checkBarkPower() {
         BarkView.clearOutput();
+        BarkView.showSpinner();
 
         let userInput = BarkManager.getUserInput();
         let isHederaAccountInput = BarkUtils.isAccountId(userInput);
@@ -368,6 +385,8 @@ class BarkManager {
             }
         } catch (error) {
             BarkView.displayErrorMessage(error, "Please ensure the account ID or Twitter handle is correct and try again.");
+        } finally {
+            BarkView.hideSpinner();  // Hide the spinner after processing is done
         }
     }
 
