@@ -240,7 +240,7 @@ async function checkBarkPower() {
 
                 // Fetch barksReceived from leaderboard
                 console.log('Fetching barksReceived from leaderboard...');
-                let leaderboardData = BarkApi.fetchBarksReceviedLeaderboard();
+                let leaderboardData = await BarkApi.fetchBarksReceviedLeaderboard();
 
                 // Find the twitterHandle in the leaderboard data
                 let found = false;
