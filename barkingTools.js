@@ -1,28 +1,120 @@
 // Global flag for toggling
 let detailsVisible = false;
 
-// Function to sanitize the Twitter handle
-function sanitizeTwitterHandle(handle) {
-    // Remove the @ symbol if it exists
-    return handle.replace(/^@/, '');
+// Basic utility functions for sanitizing, formatting, and regex matching strings
+class BarkUtils {
+    static sanitizeTwitterHandle = (handle) => {
+        // Remove the @ symbol if it exists
+        return handle.replace(/^@/, '');
+    };
+    
+    // Function to sanitize general input to prevent XSS or other issues
+    static sanitizeInput = (input) => {
+        return input.replace(/[<>\/]/g, ''); // Strip harmful characters
+    };
+    
+    // Function to check if the input is a valid accountId in the format 0.0.xxxx
+    static isAccountId = (input) => {
+        // Regex to match the accountId format (e.g., 0.0.5225094)
+        const accountIdRegex = /^0\.0\.\d+$/;
+        return accountIdRegex.test(input);
+    };
+    
+    // Function to format numbers with commas
+    static formatNumber = (number) => {
+        return number.toLocaleString('en-US'); // Formats number with commas for the US
+    };
 }
 
-// Function to sanitize general input to prevent XSS or other issues
-function sanitizeInput(input) {
-    return input.replace(/[<>\/]/g, ''); // Strip harmful characters
+// Handles all API requests/responses for Barking Game players
+class BarkApi {
+    // Fetches the Barking Power leaderboard for a given number of players
+    static async fetchBarkingPowerLeaderboard(num = 1000) {
+        num = Math.max(1, num);
+
+        const url = `https://sure-angeline-piotrswierzy-b061c303.koyeb.app/barking-power/leaderboard/barkingPower/${num}`;
+        let response = await fetch(url);
+        if (response.ok) {
+            return await response.json();
+        } else {
+            await this.logError('Failed to fetch barking power leaderboard.', response);
+            return null;
+        }
+    };
+
+    // Fetches the Barks Received leaderboard for a given number of players
+    static async fetchBarksReceviedLeaderboard(num = 1000) {
+        num = Math.max(1, num);
+
+        const url = `https://sure-angeline-piotrswierzy-b061c303.koyeb.app/barking-power/leaderboard/${num}`
+        let response = await fetch(url);
+        if (response.ok) {
+            return await response.json();
+        } else {
+            await this.logError(`Failed to fetch barks received leaderboard.`, response);
+            return null;
+        }
+    }
+
+    // Fetches the player's bark token balance from Hedera
+    static async fetchHederaBarkTokenBalance(accountId) {
+        const url = `https://mainnet-public.mirrornode.hedera.com/api/v1/tokens/0.0.5022567/balances?account.id=${accountId}`;
+        let response = await fetch(url);
+        if (response.ok) {
+            return await response.json();
+        } else {
+            await this.logError(`Failed to fetch bark token balance from Hedera for ${accountId}.`, response);
+            return null;
+        }
+    };
+
+    // Fetches available barking power for a player
+    static async fetchBarkingPower(accountId) {
+        const url = `https://sure-angeline-piotrswierzy-b061c303.koyeb.app/barking-power/${accountId}`;
+        let response = await fetch(url);
+        if (response.ok) {
+            return await response.json();
+        } else {
+            await this.logError(`Failed to fetch barking power for ${accountId}.`, response);
+            return null;
+        }
+    }
+
+    // Fetches user data for a player
+    static async fetchUserData(accountId) {
+        const url = `https://sure-angeline-piotrswierzy-b061c303.koyeb.app/users/${accountId}`;
+        let response = await fetch(url);
+        if (response.ok) {
+            return await response.json();
+        } else {
+            await this.logError(`Failed to fetch user data for ${accountId}.`, response);
+            return null;
+        }
+    }
+
+    static async fetchTwitterData(accountId) {
+        const url = `https://sure-angeline-piotrswierzy-b061c303.koyeb.app/users/twitter/${accountId}`;
+        let response = await fetch(url);
+        if (response.ok) {
+            return await response.json();
+        } else {
+            await this.logError(`Failed to fetch Twitter user data for ${accountId}.`, response);
+            return null;
+        }
+    }
+
+    // Logs the error message from the response
+    static async logError(message, response) {
+        try {
+            const errorMessage = await response.text();
+            console.error(`${message}: ${errorMessage}`);
+        } catch (e) {
+            console.error(`${message}: Unable to parse error response.`, e);
+        }
+    }
 }
 
-// Function to check if the input is a valid accountId in the format 0.0.xxxx
-function isAccountId(input) {
-    // Regex to match the accountId format (e.g., 0.0.5225094)
-    const accountIdRegex = /^0\.0\.\d+$/;
-    return accountIdRegex.test(input);
-}
-
-// Function to format numbers with commas
-function formatNumber(number) {
-    return number.toLocaleString('en-US'); // Formats number with commas for the US
-}
+// TODO: REFACTOR THE REST INTO CLASSES
 
 async function checkBarkPower() {
     // Clear previous output and error messages
@@ -43,10 +135,10 @@ async function checkBarkPower() {
     let userInput = document.getElementById('twitterHandle').value;
 
     // Sanitize the user input
-    userInput = sanitizeInput(userInput);
+    userInput = BarkUtils.sanitizeInput(userInput);
 
     // Check if the input is a Hedera account ID
-    let isHederaAccount = isAccountId(userInput);
+    let isHederaAccount = BarkUtils.isAccountId(userInput);
 
     try {
         if (isHederaAccount) {
@@ -58,9 +150,7 @@ async function checkBarkPower() {
 
             // Step 1: Fetch $hbark token balance
             console.log('Fetching $hbark token balance...');
-            let balanceUrl = `https://mainnet-public.mirrornode.hedera.com/api/v1/tokens/0.0.5022567/balances?account.id=${accountId}`;
-            let balanceResponse = await fetch(balanceUrl);
-            let balanceData = await balanceResponse.json();
+            let balanceData = await BarkApi.fetchHederaBarkTokenBalance(accountId);
 
             let hbarkBalance = 0;
             if (balanceData.balances && balanceData.balances.length > 0) {
@@ -76,9 +166,7 @@ async function checkBarkPower() {
 
             // Step 2: Fetch barking power from barking-power endpoint
             console.log('Fetching barking power data...');
-            let barkingPowerUrl = `https://sure-angeline-piotrswierzy-b061c303.koyeb.app/barking-power/${accountId}`;
-            let barkingPowerResponse = await fetch(barkingPowerUrl);
-            let barkingPowerData = await barkingPowerResponse.json();
+            let barkingPowerData = await BarkApi.fetchBarkingPower(accountId);
 
             let barkPowerData = null;
             let userData = null;
@@ -103,9 +191,7 @@ async function checkBarkPower() {
 
                 // Step 3: Attempt to fetch from users endpoint
                 console.log('Fetching user data from users endpoint...');
-                let userUrl = `https://sure-angeline-piotrswierzy-b061c303.koyeb.app/users/${accountId}`;
-                let userResponse = await fetch(userUrl);
-                userData = await userResponse.json();
+                let userData = BarkApi.fetchUserData(accountId);
 
                 if (userData.code === "HBARK_USER_NOT_FOUND") {
                     userData = null;
@@ -129,7 +215,7 @@ async function checkBarkPower() {
             }
         } else {
             // Twitter Handle Logic Path
-            let twitterHandle = sanitizeTwitterHandle(userInput);
+            let twitterHandle = BarkUtils.sanitizeTwitterHandle(userInput);
 
             if (!twitterHandle) {
                 document.getElementById('error').textContent = 'Please enter a valid Twitter handle.';
@@ -140,9 +226,7 @@ async function checkBarkPower() {
 
             // Step 1: Fetch from users/twitter endpoint
             console.log('Fetching user data from users/twitter endpoint...');
-            let userUrl = `https://sure-angeline-piotrswierzy-b061c303.koyeb.app/users/twitter/${twitterHandle}`;
-            let userResponse = await fetch(userUrl);
-            let userData = await userResponse.json();
+            let userData = BarkApi.fetchTwitterData(twitterHandle);
 
             let accountLabel = "";
             let accountId = null;
@@ -156,9 +240,7 @@ async function checkBarkPower() {
 
                 // Fetch barksReceived from leaderboard
                 console.log('Fetching barksReceived from leaderboard...');
-                let leaderboardUrl = `https://sure-angeline-piotrswierzy-b061c303.koyeb.app/barking-power/leaderboard/1000`;
-                let leaderboardResponse = await fetch(leaderboardUrl);
-                let leaderboardData = await leaderboardResponse.json();
+                let leaderboardData = BarkApi.fetchBarksReceviedLeaderboard(1000);
 
                 // Find the twitterHandle in the leaderboard data
                 let found = false;
@@ -193,17 +275,13 @@ async function checkBarkPower() {
 
                     // Fetch barking power data using accountId
                     console.log('Fetching barking power data using accountId...');
-                    let barkingPowerUrl = `https://sure-angeline-piotrswierzy-b061c303.koyeb.app/barking-power/${accountId}`;
-                    let barkingPowerResponse = await fetch(barkingPowerUrl);
-                    let barkingPowerData = await barkingPowerResponse.json();
+                    let barkingPowerData = await BarkApi.fetchBarkingPower(accountId);
 
                     barkPowerData = barkingPowerData;
 
                     // Fetch $hbark token balance
                     console.log('Fetching $hbark token balance using accountId...');
-                    let balanceUrl = `https://mainnet-public.mirrornode.hedera.com/api/v1/tokens/0.0.5022567/balances?account.id=${accountId}`;
-                    let balanceResponse = await fetch(balanceUrl);
-                    let balanceData = await balanceResponse.json();
+                    let balanceData = await BarkApi.fetchHederaBarkTokenBalance(accountId);
 
                     if (balanceData.balances && balanceData.balances.length > 0) {
                         hbarkBalance = balanceData.balances[0].balance;
@@ -222,9 +300,7 @@ async function checkBarkPower() {
 
                     // Fetch barksReceived from leaderboard
                     console.log('Fetching barksReceived from leaderboard...');
-                    let leaderboardUrl = `https://sure-angeline-piotrswierzy-b061c303.koyeb.app/barking-power/leaderboard/1000`;
-                    let leaderboardResponse = await fetch(leaderboardUrl);
-                    let leaderboardData = await leaderboardResponse.json();
+                    let leaderboardData = await BarkApi.fetchBarksReceviedLeaderboard(1000);
 
                     // Find the twitterHandle in the leaderboard data
                     let found = false;
@@ -256,10 +332,6 @@ async function checkBarkPower() {
     }
 }
 
-
-
-
-
 function displayBarkPowerData(barkPowerData, accountLabel, userData = null, hbarkBalance = null, accountId = null) {
     console.log(`Displaying data with accountLabel: ${accountLabel}`);
     let output = `<p><strong>Account Label:</strong> ${accountLabel}</p>`;
@@ -271,11 +343,11 @@ function displayBarkPowerData(barkPowerData, accountLabel, userData = null, hbar
         const barkPowerPercentageUsed = (barkPowerUsed / barkPowerData.todayAllocatedBarks) * 100;
 
         output += `
-            <p><strong>Bark Power Refilled:</strong> ${formatNumber(Math.floor(barkPowerData.todayAllocatedBarks))}</p>
-            <p><strong>Barking Power Remaining:</strong> ${formatNumber(Math.floor(barkPowerData.barkingPower))}</p>
-            <p><strong>Bark Power Used Today:</strong> ${formatNumber(Math.floor(barkPowerUsed))}</p>
-            <p><strong>Total Barks Given:</strong> ${formatNumber(Math.floor(barkPowerData.totalBarksDonated))}</p>
-            <p><strong>Total Barks Received:</strong> ${formatNumber(Math.floor(barkPowerData.barksReceived))}</p>
+            <p><strong>Bark Power Refilled:</strong> ${barkUtils.formatNumber(Math.floor(barkPowerData.todayAllocatedBarks))}</p>
+            <p><strong>Barking Power Remaining:</strong> ${barkUtils.formatNumber(Math.floor(barkPowerData.barkingPower))}</p>
+            <p><strong>Bark Power Used Today:</strong> ${barkUtils.formatNumber(Math.floor(barkPowerUsed))}</p>
+            <p><strong>Total Barks Given:</strong> ${barkUtils.formatNumber(Math.floor(barkPowerData.totalBarksDonated))}</p>
+            <p><strong>Total Barks Received:</strong> ${barkUtils.formatNumber(Math.floor(barkPowerData.barksReceived))}</p>
         `;
 
         // Include More Details section
@@ -293,12 +365,12 @@ function displayBarkPowerData(barkPowerData, accountLabel, userData = null, hbar
         }
 
         // Include $hbark Token Balance
-        output += `<p><strong>$hbark Token Balance:</strong> ${hbarkBalance !== null ? formatNumber(hbarkBalance) : 'N/A'}</p>`;
+        output += `<p><strong>$hbark Token Balance:</strong> ${hbarkBalance !== null ? BarkUtils.formatNumber(hbarkBalance) : 'N/A'}</p>`;
 
         // Include hodlRelativeBarkingPower and lpRelativeBarkingPower
         output += `
-                <p><strong>$hBARK Balance (HODL) at time of last refill:</strong> ${formatNumber(Math.floor(barkPowerData.hodlRelativeBarkingPower / 2))}</p>
-                <p><strong>$hBARK Balance (LP) at time of last refill:</strong> ${formatNumber(Math.floor(barkPowerData.lpRelativeBarkingPower / 3))}</p>
+                <p><strong>$hBARK Balance (HODL) at time of last refill:</strong> ${barkUtils.formatNumber(Math.floor(barkPowerData.hodlRelativeBarkingPower / 2))}</p>
+                <p><strong>$hBARK Balance (LP) at time of last refill:</strong> ${barkUtils.formatNumber(Math.floor(barkPowerData.lpRelativeBarkingPower / 3))}</p>
             </div>
         `;
 
@@ -325,14 +397,14 @@ function displayBarkPowerData(barkPowerData, accountLabel, userData = null, hbar
         console.log('Displaying barks received data for unlinked user.');
         // For users who have not linked a Hedera account but have received barks
         //output += `<p>This user can receive Barks but cannot give them since they do not own $hBARK or have a linked Hedera account.</p>`;
-        output += `<p><strong>Total Barks Received:</strong> ${formatNumber(barkPowerData.barksReceived)}</p>`;
+        output += `<p><strong>Total Barks Received:</strong> ${barkUtils.formatNumber(barkPowerData.barksReceived)}</p>`;
         document.getElementById("output").innerHTML = output;
     } else {
         console.log('Displaying basic information without barking power data.');
         // When barkPowerData is not available or missing expected properties
         // Display $hbark Token Balance if available
         if (hbarkBalance !== null) {
-            output += `<p><strong>$hbark Token Balance:</strong> ${formatNumber(hbarkBalance)}</p>`;
+            output += `<p><strong>$hbark Token Balance:</strong> ${barkUtils.formatNumber(hbarkBalance)}</p>`;
         }
 
         // Include Account ID if available
@@ -373,46 +445,44 @@ function displayBarkPowerData(barkPowerData, accountLabel, userData = null, hbar
 
 // Function to fetch and display the "Barks Remaining" leaderboard
 async function fetchBarksRemaining() {
-    const url = 'https://sure-angeline-piotrswierzy-b061c303.koyeb.app/barking-power/leaderboard/barkingPower/50';
     const leaderboardTable = document.getElementById('barksRemainingLeaderboardBody');
     const leaderboard = document.getElementById('barksRemainingLeaderboard'); // Get the table element
 
     try {
-        let response = await fetch(url);
-        if (response.ok) {
-            let data = await response.json();
-
-            // Clear existing leaderboard content
-            leaderboardTable.innerHTML = '';
-
-            // Loop through the data and populate the leaderboard
-            data.forEach((item) => {
-                let row = document.createElement('tr');
-
-                // Check if twitterHandle exists, if not use accountId
-                let displayName = item.twitterHandle ? item.twitterHandle : item.accountId;
-
-                // Create the Twitter User (or Account ID) cell
-                let twitterUserCell = document.createElement('td');
-                twitterUserCell.textContent = displayName;
-
-                // Create the Bark Power Remaining cell (with number formatting)
-                let barkPowerRemainingCell = document.createElement('td');
-                barkPowerRemainingCell.textContent = item.barkingPower.toLocaleString('en-US'); // format number with commas
-
-                // Append the cells to the row
-                row.appendChild(twitterUserCell);
-                row.appendChild(barkPowerRemainingCell);
-
-                // Append the row to the table body
-                leaderboardTable.appendChild(row);
-            });
-
-            // Show the leaderboard after the data is loaded
-            leaderboard.style.display = 'table'; // Ensures the table is visible
-        } else {
+        let data = await BarkApi.fetchBarkingPowerLeaderboard();
+        if (data == null) {
             console.error('Failed to fetch barks remaining data.');
+            return;
         }
+
+        // Clear existing leaderboard content
+        leaderboardTable.innerHTML = '';
+
+        // Loop through the data and populate the leaderboard
+        data.forEach((item) => {
+            let row = document.createElement('tr');
+
+            // Check if twitterHandle exists, if not use accountId
+            let displayName = item.twitterHandle ? item.twitterHandle : item.accountId;
+
+            // Create the Twitter User (or Account ID) cell
+            let twitterUserCell = document.createElement('td');
+            twitterUserCell.textContent = displayName;
+
+            // Create the Bark Power Remaining cell (with number formatting)
+            let barkPowerRemainingCell = document.createElement('td');
+            barkPowerRemainingCell.textContent = item.barkingPower.toLocaleString('en-US'); // format number with commas
+
+            // Append the cells to the row
+            row.appendChild(twitterUserCell);
+            row.appendChild(barkPowerRemainingCell);
+
+            // Append the row to the table body
+            leaderboardTable.appendChild(row);
+        });
+
+        // Show the leaderboard after the data is loaded
+        leaderboard.style.display = 'table'; // Ensures the table is visible
     } catch (error) {
         console.error('Error occurred while fetching barks remaining data:', error);
     }
