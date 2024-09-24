@@ -103,6 +103,7 @@ class BarkView {
             output += BarkView.buildUnlinkedUserBarksReceivedOutput(barkPowerData);
 
             document.getElementById("output").innerHTML = output;
+            document.getElementById("clearSearch").style.display = "block";
         } else {
             console.log('Displaying basic information without barking power data.');
             output += BarkView.buildBasicInfoOutput(hbarkBalance, accountId, userData);
