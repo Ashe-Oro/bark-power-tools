@@ -115,14 +115,15 @@ class DefiView {
         <p><strong>Pool Name:</strong> ${DefiView.sanitizeInput(attributes.name)}</p>
         <p><strong>$hbark Token Price (USD):</strong> $${formattedBaseTokenPrice}</p>
         <p><strong>$hbar Token Price (USD):</strong> $${formattedQuoteTokenPrice}</p>
-        <p><strong>Base Token Price per Quote Token:</strong> ${formattedBaseTokenPriceQuoteToken}</p>
-        <p><strong>Quote Token Price per Base Token:</strong> ${formattedQuoteTokenPriceBaseToken}</p>
-        <p><strong>Pool Created At:</strong> ${new Date(attributes.pool_created_at).toLocaleString()}</p>
+        <p><strong>1 $hbark = </strong> ${formattedBaseTokenPriceQuoteToken} $hbar</p>
+        <p><strong>1 $hbar = </strong> ${formattedQuoteTokenPriceBaseToken} $hbark</p>
         <p><strong>Fully Diluted Valuation (USD):</strong> $${DefiView.formatNumber(parseFloat(attributes.fdv_usd), 0)}</p>
-        <p><strong>Market Cap (USD):</strong> $${formattedMarketCap}</p>
+        <p><strong>Current Market Cap (USD):</strong> $${DefiView.formatNumber(parseFloat(attributes.fdv_usd), 0)}</p>
+        <p><strong>Total Supply: </strong> 420,000,000</p>
+        <p> <strong>MAX Supply: </strong> 420,000,000</p>
         <p><strong>Price Change (24h):</strong> ${attributes.price_change_percentage.h24}%</p>
         <p><strong>Volume (24h USD):</strong> $${formattedVolume24h}</p>
-        <p><strong>Reserve in USD:</strong> $${formattedReserveUSD}</p>
+        <p><strong>Liquidity (USD):</strong> $${formattedReserveUSD}</p>
         <p><strong>Transactions (24h):</strong> ${attributes.transactions.h24.buys} Buys, ${attributes.transactions.h24.sells} Sells</p>
         
         <p><strong>Swap on DEX: </strong>
