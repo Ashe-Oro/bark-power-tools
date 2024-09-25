@@ -261,10 +261,47 @@ class BarkView {
         }
     }
 
+    // Function to show the account spinner
+    static showAccountSpinner() {
+        const spinner = document.getElementById("account-spinner");
+        if (spinner) {
+            spinner.style.display = "block";
+        }
+    }
+
+    // Function to hide the account spinner
+    static hideAccountSpinner() {
+        const spinner = document.getElementById("account-spinner");
+        if (spinner) {
+            spinner.style.display = "none";
+        }
+    }
+
+    // Function to show the leaderboard spinner
+    static showLeaderboardSpinner() {
+        const spinner = document.getElementById("leaderboard-spinner");
+        if (spinner) {
+            spinner.style.display = "block";
+        }
+    }
+
+    // Function to hide the leaderboard spinner
+    static hideLeaderboardSpinner() {
+        const spinner = document.getElementById("leaderboard-spinner");
+        if (spinner) {
+            spinner.style.display = "none";
+        }
+    }
+
     // Function to fetch and display the "Barks Remaining" leaderboard
     static async fetchBarksRemaining() {
         const leaderboardTable = document.getElementById('barksRemainingLeaderboardBody');
         const leaderboard = document.getElementById('barksRemainingLeaderboard'); // Get the table element
+
+        // Show the leaderboard spinner before fetching data
+        BarkView.showLeaderboardSpinner();
+        // Hide the leaderboard table while loading
+        leaderboard.style.display = 'none';
 
         try {
             let data = await BarkApi.fetchBarkingPowerLeaderboard();
@@ -286,6 +323,8 @@ class BarkView {
             leaderboard.style.display = 'table'; // Ensures the table is visible
         } catch (error) {
             console.error('Error occurred while fetching barks remaining data:', error);
+        } finally {
+            BarkView.hideLeaderboardSpinner();
         }
     }
 
@@ -356,6 +395,7 @@ class BarkView {
 class BarkManager {
     static async checkBarkPower() {
         BarkView.clearOutput();
+        BarkView.showAccountSpinner();
 
         let userInput = BarkManager.getUserInput();
         let isHederaAccountInput = BarkUtils.isAccountId(userInput);
@@ -368,6 +408,8 @@ class BarkManager {
             }
         } catch (error) {
             BarkView.displayErrorMessage(error, "Please ensure the account ID or Twitter handle is correct and try again.");
+        } finally {
+            BarkView.hideAccountSpinner();  // Hide the spinner after processing is done
         }
     }
 
