@@ -509,3 +509,6 @@ function clearSearch() {
 async function checkBarkPower() {
     await BarkManager.checkBarkPower();
 }
+
+
+

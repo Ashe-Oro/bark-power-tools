@@ -1,5 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
+
+
 <head>
     <meta charset="UTF-8">
     <title>The Barking Game - Bark Power Tools</title>
@@ -42,6 +44,17 @@
         <button id="clearSearch" onclick="clearSearch()" style="display: none;">Clear Search</button>
     </div>
 
+    <!-- DeFi Module Section -->
+<div class="defi-container">
+    <h2>DeFi Pool and $hbark Price Information</h2>
+    <button type="button" id="fetchDefiDataButton" class="defi-fetch-button">Fetch DeFi Data</button>
+    
+    <div id="defiData" class="defi-data" style="display: none;">
+        <!-- DeFi Pool Data Will Be Injected Here -->
+    </div>
+</div>
+
+
     <!-- Barks Remaining Leaderboard Section -->
     <div class="leaderboard-container">
         <h2>Who's Got Barks Remaining?</h2>
@@ -60,8 +73,10 @@
         </table>
     </div>
 
-    <!-- Include the JavaScript file -->
-    <script src="javascripts/barkingTools.js"></script>
+    <!-- Include the existing JavaScript file -->
+<script src="javascripts/barkingTools.js"></script>
+<!-- Include the new DeFi Module JavaScript file -->
+<script src="javascripts/defiModule.js"></script>
 </body>
 </html>
 
