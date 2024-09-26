@@ -137,46 +137,71 @@ class BarkView {
 
 
         // Modify displayBarkPowerData to include leaderboard positions
-    static displayBarkPowerData(barkPowerData, accountLabel, userData = null, hbarkBalance = null, accountId = null, leaderboardPositions = null) {
-        console.log(`Displaying data with accountLabel: ${accountLabel}`);
-        let output = BarkView.buildBasicOutput(accountLabel);
-
-        if (barkPowerData && barkPowerData.todayAllocatedBarks !== undefined) {
-            console.log('Displaying barking power details.');
-            output += BarkView.buildDetailedBarkPowerOutput(barkPowerData, hbarkBalance, accountId, userData);
-
-            // Display Leaderboard Positions if available
-            if (leaderboardPositions) {
-                output += BarkView.buildLeaderboardPositionsSection(leaderboardPositions);
+        static displayBarkPowerData(
+            barkPowerData,
+            accountLabel,
+            userData = null,
+            hbarkBalance = null,
+            accountId = null,
+            leaderboardPositions = null
+        ) {
+            console.log(`Displaying data with accountLabel: ${accountLabel}`);
+            let output = BarkView.buildBasicOutput(accountLabel);
+        
+            // Reset UI elements to default state
+            BarkView.toggleElementDisplay("toggleDetails", "none");
+            BarkView.toggleElementDisplay("progressContainer", "none");
+            BarkView.toggleElementDisplay("extraDetails", "none");
+        
+            if (barkPowerData && barkPowerData.todayAllocatedBarks !== undefined) {
+                console.log('Displaying barking power details.');
+                output += BarkView.buildDetailedBarkPowerOutput(
+                    barkPowerData,
+                    hbarkBalance,
+                    accountId,
+                    userData
+                );
+        
+                // Display Leaderboard Positions if available
+                if (leaderboardPositions) {
+                    output += BarkView.buildLeaderboardPositionsSection(leaderboardPositions);
+                }
+        
+                document.getElementById("output").innerHTML = output;
+                BarkView.updateUIElementsForDetailedView(barkPowerData);
+        
+            } else if (barkPowerData && barkPowerData.barksReceived !== undefined) {
+                console.log('Displaying barks received data for unlinked user.');
+                output += BarkView.buildUnlinkedUserBarksReceivedOutput(barkPowerData);
+        
+                // Display Leaderboard Positions if available
+                if (leaderboardPositions) {
+                    output += BarkView.buildLeaderboardPositionsSection(leaderboardPositions);
+                }
+        
+                document.getElementById("output").innerHTML = output;
+                document.getElementById("clearSearch").style.display = "block";
+        
+                // Ensure irrelevant UI elements are hidden
+                // These lines are optional now since we reset at the start
+                // BarkView.toggleElementDisplay("toggleDetails", "none");
+                // BarkView.toggleElementDisplay("progressContainer", "none");
+                // BarkView.toggleElementDisplay("extraDetails", "none");
+        
+            } else {
+                console.log('Displaying basic information without barking power data.');
+                output += BarkView.buildBasicInfoOutput(hbarkBalance, accountId, userData);
+        
+                // Display Leaderboard Positions if available
+                if (leaderboardPositions) {
+                    output += BarkView.buildLeaderboardPositionsSection(leaderboardPositions);
+                }
+        
+                document.getElementById("output").innerHTML = output;
+                BarkView.toggleUIElementsForBasicView(accountId, userData);
             }
-
-            document.getElementById("output").innerHTML = output;
-            BarkView.updateUIElementsForDetailedView(barkPowerData);
-
-        } else if (barkPowerData && barkPowerData.barksReceived !== undefined) {
-            console.log('Displaying barks received data for unlinked user.');
-            output += BarkView.buildUnlinkedUserBarksReceivedOutput(barkPowerData);
-
-            // Display Leaderboard Positions if available
-            if (leaderboardPositions) {
-                output += BarkView.buildLeaderboardPositionsSection(leaderboardPositions);
-            }
-
-            document.getElementById("output").innerHTML = output;
-            document.getElementById("clearSearch").style.display = "block";
-        } else {
-            console.log('Displaying basic information without barking power data.');
-            output += BarkView.buildBasicInfoOutput(hbarkBalance, accountId, userData);
-
-            // Display Leaderboard Positions if available
-            if (leaderboardPositions) {
-                output += BarkView.buildLeaderboardPositionsSection(leaderboardPositions);
-            }
-
-            document.getElementById("output").innerHTML = output;
-            BarkView.toggleUIElementsForBasicView(accountId, userData);
         }
-    }
+        
 
         // New method to build the leaderboard positions section
         static buildLeaderboardPositionsSection(leaderboardPositions) {
