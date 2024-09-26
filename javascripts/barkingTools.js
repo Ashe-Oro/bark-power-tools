@@ -232,7 +232,7 @@ class BarkView {
         return `
             <div id="leaderboardPositions">
                 <p><strong>Barks Given Leaderboard Position:</strong> ${leaderboardPositions.barksGiven?.rank || 'n/a'}</p>
-                <p><strong>Barks Received Position:</strong> ${leaderboardPositions.barksReceived?.rank || 'n/a'}</p>
+                <p><strong>Barks Received Leaderboard Position:</strong> ${leaderboardPositions.barksReceived?.rank || 'n/a'}</p>
             </div>
         `;
     }
