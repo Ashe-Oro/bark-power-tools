@@ -1,6 +1,7 @@
 // Global flag for toggling
 let detailsVisible = false;
 
+// Base URLs for API endpoints
 const BASE_URLS = {
     mirrorNode: 'https://mainnet-public.mirrornode.hedera.com/api/v1/tokens/0.0.5022567',
     barkingPower: 'https://sure-angeline-piotrswierzy-b061c303.koyeb.app/barking-power',
@@ -34,6 +35,7 @@ class BarkUtils {
 
 class BarkApi {
 
+    // Fetch user data by Twitter handle
     static async fetchUserByTwitter(twitterHandle) {
         const url = `${BASE_URLS.users}/twitter/${twitterHandle}`;
         const response = await fetch(url);
@@ -41,41 +43,51 @@ class BarkApi {
         // Read the response body regardless of the status code
         const data = await response.json();
 
-        // Return the data even if the response is not OK
+        // If the response status is 404, ensure the code is set correctly
+        if (response.status === 404) {
+            data.code = "HBARK_USER_NOT_FOUND";
+            data.message = null;
+        }
+
         return data;
     }
 
+    // Fetch balance by account ID
     static async fetchBalance(accountId) {
         const url = `${BASE_URLS.mirrorNode}/balances?account.id=${accountId}`;
         const response = await fetch(url);
         return await response.json();
     }
 
+    // Fetch barking power by account ID
     static async fetchBarkingPower(accountId) {
         const url = `${BASE_URLS.barkingPower}/${accountId}`;
         const response = await fetch(url);
         return await response.json();
     }
 
+    // Fetch user data by account ID
     static async fetchUserByAccountId(accountId) {
         const url = `${BASE_URLS.users}/${accountId}`;
         const response = await fetch(url);
         return await response.json();
     }
 
+    // Fetch Barks Remaining Leaderboard
     static async fetchBarksRemainingLeaderboard(limit = 1000) {
         const url = `${BASE_URLS.leaderboard}/${limit}`;
         const response = await fetch(url);
         return await response.json();
     }
 
+    // Fetch Barking Power Leaderboard
     static async fetchBarkingPowerLeaderboard(limit = 1000) {
         const url = `${BASE_URLS.leaderboard}/barkingPower/${limit}`;
         const response = await fetch(url);
         return await response.json();
     }
 
-    // New method to fetch Barks Given Leaderboard Position by accountId
+    // Fetch Barks Given Leaderboard Position by accountId
     static async fetchBarksGivenPosition(accountId) {
         const url = `${BASE_URLS.leaderboard}/totalBarksDonated/${accountId}/position`;
         const response = await fetch(url);
@@ -85,7 +97,7 @@ class BarkApi {
         return await response.json();
     }
 
-    // New method to fetch Barks Received Leaderboard Position by accountId
+    // Fetch Barks Received Leaderboard Position by accountId
     static async fetchBarksReceivedPosition(accountId) {
         const url = `${BASE_URLS.leaderboard}/${accountId}/position`;
         const response = await fetch(url);
@@ -95,6 +107,7 @@ class BarkApi {
         return await response.json();
     }
 
+    // Fetch Full Barks Received Leaderboard
     static async fetchFullBarksReceivedLeaderboard(limit = 2000) {
         const url = `${BASE_URLS.leaderboard}/${limit}`;
         const response = await fetch(url);
@@ -104,14 +117,13 @@ class BarkApi {
         const data = await response.json();
         return data;
     }
-    
 }
 
 class BarkView {
+    // Clear the output and reset UI elements
     static clearOutput() {
         document.getElementById("output").innerHTML = "";
         document.getElementById("error").innerHTML = "";
-
 
         const extraDetails = document.getElementById("extraDetails");
         if (extraDetails) {
@@ -124,6 +136,7 @@ class BarkView {
         }
     }
 
+    // Display error messages
     static displayErrorMessage(error, message) {
         let errorMessage = "";
         if (error) {
@@ -135,84 +148,94 @@ class BarkView {
         error ? console.error(message, error) : console.error(message);
     }
 
+    // Display bark power data with updated method
+    static displayBarkPowerData(
+        barkPowerData,
+        accountLabel,
+        userData = null,
+        hbarkBalance = null,
+        accountId = null,
+        leaderboardPositions = null
+    ) {
+        console.log(`Displaying data with accountLabel: ${accountLabel}`);
+        let output = BarkView.buildBasicOutput(accountLabel);
 
-        // Modify displayBarkPowerData to include leaderboard positions
-        static displayBarkPowerData(
-            barkPowerData,
-            accountLabel,
-            userData = null,
-            hbarkBalance = null,
-            accountId = null,
-            leaderboardPositions = null
-        ) {
-            console.log(`Displaying data with accountLabel: ${accountLabel}`);
-            let output = BarkView.buildBasicOutput(accountLabel);
-        
-            // Reset UI elements to default state
+        // Reset UI elements to default state
+        BarkView.toggleElementDisplay("toggleDetails", "none"); // Hide "Show More Details" button by default
+        BarkView.toggleElementDisplay("progressContainer", "none"); // Hide progress bar by default
+        BarkView.toggleElementDisplay("extraDetails", "none"); // Hide extra details section by default
+        BarkView.toggleElementDisplay("clearSearch", "none"); // Hide clear search button by default
+        BarkView.toggleElementDisplay("output", "none"); // Hide output container by default
+
+        if (barkPowerData && barkPowerData.todayAllocatedBarks !== undefined) {
+            console.log('Displaying barking power details.');
+            output += BarkView.buildDetailedBarkPowerOutput(
+                barkPowerData,
+                hbarkBalance,
+                accountId,
+                userData
+            );
+
+            // Display Leaderboard Positions if available
+            if (leaderboardPositions) {
+                output += BarkView.buildLeaderboardPositionsSection(leaderboardPositions);
+            }
+
+            document.getElementById("output").innerHTML = output;
+            BarkView.updateUIElementsForDetailedView(barkPowerData);
+
+        } else if (barkPowerData && barkPowerData.barksReceived !== undefined) {
+            console.log('Displaying barks received data for unlinked user.');
+            output += BarkView.buildUnlinkedUserBarksReceivedOutput(barkPowerData);
+
+            // Display Leaderboard Positions if available
+            if (leaderboardPositions) {
+                output += BarkView.buildLeaderboardPositionsSection(leaderboardPositions);
+            }
+
+            document.getElementById("output").innerHTML = output;
+            BarkView.toggleElementDisplay("output", "block"); // Ensure "output" is visible
+            BarkView.toggleElementDisplay("clearSearch", "block"); // Show clear search button
+
+            // Since this is an unlinked user without detailed data, ensure "Show More Details" is hidden
             BarkView.toggleElementDisplay("toggleDetails", "none");
-            BarkView.toggleElementDisplay("progressContainer", "none");
-            BarkView.toggleElementDisplay("extraDetails", "none");
-        
-            if (barkPowerData && barkPowerData.todayAllocatedBarks !== undefined) {
-                console.log('Displaying barking power details.');
-                output += BarkView.buildDetailedBarkPowerOutput(
-                    barkPowerData,
-                    hbarkBalance,
-                    accountId,
-                    userData
-                );
-        
-                // Display Leaderboard Positions if available
-                if (leaderboardPositions) {
-                    output += BarkView.buildLeaderboardPositionsSection(leaderboardPositions);
-                }
-        
-                document.getElementById("output").innerHTML = output;
-                BarkView.updateUIElementsForDetailedView(barkPowerData);
-        
-            } else if (barkPowerData && barkPowerData.barksReceived !== undefined) {
-                console.log('Displaying barks received data for unlinked user.');
-                output += BarkView.buildUnlinkedUserBarksReceivedOutput(barkPowerData);
-        
-                // Display Leaderboard Positions if available
-                if (leaderboardPositions) {
-                    output += BarkView.buildLeaderboardPositionsSection(leaderboardPositions);
-                }
-        
-                document.getElementById("output").innerHTML = output;
-                document.getElementById("clearSearch").style.display = "block";
-        
-                // Ensure irrelevant UI elements are hidden
-                // These lines are optional now since we reset at the start
-                // BarkView.toggleElementDisplay("toggleDetails", "none");
-                // BarkView.toggleElementDisplay("progressContainer", "none");
-                // BarkView.toggleElementDisplay("extraDetails", "none");
-        
+
+        } else {
+            console.log('Displaying basic information without barking power data.');
+            output += BarkView.buildBasicInfoOutput(hbarkBalance, accountId, userData);
+
+            // Display Leaderboard Positions if available
+            if (leaderboardPositions) {
+                output += BarkView.buildLeaderboardPositionsSection(leaderboardPositions);
+            }
+
+            document.getElementById("output").innerHTML = output;
+            BarkView.toggleUIElementsForBasicView(accountId, userData);
+
+            // Determine whether to show or hide the "Show More Details" button
+            if (accountId || (userData && userData.twitterHandle)) {
+                BarkView.toggleElementDisplay("toggleDetails", "block"); // Show button if applicable
             } else {
-                console.log('Displaying basic information without barking power data.');
-                output += BarkView.buildBasicInfoOutput(hbarkBalance, accountId, userData);
-        
-                // Display Leaderboard Positions if available
-                if (leaderboardPositions) {
-                    output += BarkView.buildLeaderboardPositionsSection(leaderboardPositions);
-                }
-        
-                document.getElementById("output").innerHTML = output;
-                BarkView.toggleUIElementsForBasicView(accountId, userData);
+                BarkView.toggleElementDisplay("toggleDetails", "none"); // Hide button if not applicable
             }
         }
-        
 
-        // New method to build the leaderboard positions section
-        static buildLeaderboardPositionsSection(leaderboardPositions) {
-            return `
-                <div id="leaderboardPositions">
-                    <h4>Leaderboard Positions</h4>
-                    <p><strong>Barks Given Position:</strong> ${leaderboardPositions.barksGiven?.rank || 'n/a'}</p>
-                    <p><strong>Barks Received Position:</strong> ${leaderboardPositions.barksReceived?.rank || 'n/a'}</p>
-                </div>
-            `;
+        // Finally, ensure the "output" container is visible if there's any content
+        const outputElement = document.getElementById("output");
+        if (outputElement && outputElement.innerHTML.trim() !== "") {
+            BarkView.toggleElementDisplay("output", "block");
         }
+    }
+
+    // Build the leaderboard positions section
+    static buildLeaderboardPositionsSection(leaderboardPositions) {
+        return `
+            <div id="leaderboardPositions">
+                <p><strong>Barks Given Leaderboard Position:</strong> ${leaderboardPositions.barksGiven?.rank || 'n/a'}</p>
+                <p><strong>Barks Received Position:</strong> ${leaderboardPositions.barksReceived?.rank || 'n/a'}</p>
+            </div>
+        `;
+    }
 
     // Helper function to build the basic account label output
     static buildBasicOutput(accountLabel) {
@@ -418,6 +441,7 @@ class BarkView {
         }
     }
 
+    // Function to add a user cell to the leaderboard table
     static addUserCell(item, leaderboardTable) {
         let row = document.createElement('tr');
 
@@ -437,8 +461,6 @@ class BarkView {
             let submitButton = document.getElementById('checkBarkPower');
             submitButton.click();
         });
-
-
 
         // Create the Bark Power Remaining cell (with number formatting)
         let barkPowerRemainingCell = document.createElement('td');
@@ -470,6 +492,7 @@ class BarkView {
         }
     }
 
+    // Function to clear the search and reset UI elements
     static clearSearch() {
         // Hide elements only if they exist
         BarkView.toggleElementDisplay("toggleDetails", "none");
@@ -477,14 +500,22 @@ class BarkView {
         BarkView.toggleElementDisplay("clearSearch", "none");
         BarkView.toggleElementDisplay("output", "none");
 
+        // Clear input field
         const twitterHandleElement = document.getElementById("twitterHandle");
         if (twitterHandleElement) {
             twitterHandleElement.value = "";
+        }
+
+        // Clear error messages
+        const errorElement = document.getElementById("error");
+        if (errorElement) {
+            errorElement.textContent = "";
         }
     }
 }
 
 class BarkManager {
+    // Main function to check bark power based on user input
     static async checkBarkPower() {
         BarkView.clearOutput();
         BarkView.showAccountSpinner();
@@ -505,11 +536,13 @@ class BarkManager {
         }
     }
 
+    // Retrieve and sanitize user input
     static getUserInput() {
         let userInput = document.getElementById('twitterHandle').value;
         return BarkUtils.sanitizeInput(userInput);
     }
 
+    // Process search when a Hedera account ID is provided
     static async processHederaAccount(accountId) {
         let hbarkBalance = 0;
         let barkPowerData = null;
@@ -555,6 +588,7 @@ class BarkManager {
         BarkView.displayBarkPowerData(barkPowerData, accountLabel, userData, hbarkBalance, accountId, leaderboardPositions);
     }
 
+    // Process search when a Twitter handle is provided
     static async processTwitterHandle(twitterHandleInput) {
         let accountLabel = '';
         let barkPowerData = null;
@@ -618,6 +652,7 @@ class BarkManager {
         }
     }
 
+    // Update account label based on $hbark balance
     static updateAccountLabelBasedOnBalance(hbarkBalance) {
         if (hbarkBalance > 0) {
             console.log(`$hbark balance found: ${hbarkBalance}`);
@@ -628,6 +663,7 @@ class BarkManager {
         }
     }
 
+    // Update account label for users without bark power
     static updateAccountLabelForNoBarkPower(hbarkBalance) {
         if (hbarkBalance === 0) {
             return "Account does not currently hold $HBARK and has not been allocated Bark Power";
@@ -636,6 +672,7 @@ class BarkManager {
         }
     }
 
+    // Process user data and determine account label
     static async processUserData(userData) {
         let accountLabel;
         if (userData.code === "HBARK_USER_NOT_FOUND") {
@@ -649,6 +686,7 @@ class BarkManager {
         }
     }
 
+    // Determine account label based on user data
     static determineAccountLabel(userData) {
         if (userData.signedTermMessage) {
             return "Signed Terms";
@@ -660,14 +698,13 @@ class BarkManager {
     }
 }
 
-
-// Event listener for the checkBarkPower function
+// Event listener for the "Check Bark Power" button
 const checkBarkPowerButton = document.getElementById('checkBarkPower');
 if (checkBarkPowerButton) {
     checkBarkPowerButton.addEventListener('click', BarkManager.checkBarkPower);
 }
 
-// Event listener for the button click to trigger fetching barks remaining
+// Event listener for the "Fetch Barks Remaining" button
 const fetchBarksRemainingButton = document.getElementById('fetchBarksRemainingButton');
 if (fetchBarksRemainingButton) {
     fetchBarksRemainingButton.addEventListener('click', BarkView.fetchBarksRemaining);
@@ -685,5 +722,3 @@ function clearSearch() {
 async function checkBarkPower() {
     await BarkManager.checkBarkPower();
 }
-
-
