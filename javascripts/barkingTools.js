@@ -37,19 +37,31 @@ class BarkHistory {
     // Sort trades in ascending order by timestamp to process balance correctly
     trades.sort((a, b) => new Date(a.attributes.block_timestamp) - new Date(b.attributes.block_timestamp));
 
-    const accountBalances = {}; // Track balances for each account
+    let accountBalances = {}; // Track balances for each account
+    let tradeResults = []; // Track trade results;
 
-    return trades.map(async (trade, index) => {  // Corrected arrow function
+    for (const [index, trade] of trades.entries()) {  // Corrected arrow function
       const tradeAttributes = trade.attributes;
 
-      const accountData = await BarkApi.fetchHederaAccount(tradeAttributes.tx_from_address);
-      const hederaAccount = accountData.account;
+      let hederaAccount;
+      try {
+        const accountData = await BarkApi.fetchHederaAccount(tradeAttributes.tx_from_address);
+        hederaAccount = accountData.account;
+      } catch (error) {
+        console.warn(error);
+      }
 
-      const twitterData = await BarkApi.fetchTwitterAccount(hederaAccount);
-      const twitterHandle = twitterData.twitterHandle || 'Unknown';
+      let twitterHandle;
+      try {
+        const twitterData = await BarkApi.fetchTwitterAccount(hederaAccount);
+        twitterHandle = twitterData.twitterHandle || 'Unknown';
+      } catch (error) {
+        console.warn(error);
+        twitterHandle = 'Unknown;'
+      }
 
       // Initialize HBARK balance if not already tracked
-      if (!(hederaAccount in accountBalances)) {
+      if (hederaAccount && !(hederaAccount in accountBalances)) {
         try {
           const balanceData = await BarkApi.fetchHederaAccountBalance(hederaAccount);
           accountBalances[hederaAccount] = balanceData.balances.length > 0 ? balanceData.balances[0].balance : 0;
@@ -77,28 +89,30 @@ class BarkHistory {
       fromTokenValueUSD = this.formatCurrency(fromTokenValueUSD, fromTokenId);
       toTokenValueUSD = this.formatCurrency(toTokenValueUSD, toTokenId);
 
-      return {
+      tradeResults.push({
         "number": index + 1,
         "timestamp": tradeAttributes.block_timestamp,
         "txHash": tradeAttributes.tx_hash,
         "from_address": hederaAccount,
         "twitter": twitterHandle,
-        "hbarkBalance": accountBalances[hederaAccount],
+        "hbarkBalance": hederaAccount ? accountBalances[hederaAccount] : 0,
         "fromTokenAmount": fromTokenAmountRounded,
         "fromTokenId": fromTokenId,
-        "priceFromUsd": parseFloat(tradeAttributes.price_from_in_usd).toFixed(7),
+        "priceFromUsd": Number(parseFloat(tradeAttributes.price_from_in_usd).toFixed(7)),
         "totalFromValueUsd": fromTokenValueUSD,
         "toTokenAmount": toTokenAmountRounded,
         "toTokenId": toTokenId,
-        "priceToUsd": parseFloat(tradeAttributes.price_to_in_usd).toFixed(7),
+        "priceToUsd": Number(parseFloat(tradeAttributes.price_to_in_usd).toFixed(7)),
         "totalToValueUsd": toTokenValueUSD,
         "type": tradeType
-      };
-    });
+      });
+    }
+
+    return tradeResults;
   }
 
   static formatCurrency(value, tokenId) {
-    return value.toFixed(tokenId === 'HBARK' ? 7 : 2);
+    return Number(value.toFixed(tokenId === 'HBARK' ? 7 : 2));
   }
 }
 
