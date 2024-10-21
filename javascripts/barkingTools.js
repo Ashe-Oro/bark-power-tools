@@ -308,44 +308,57 @@ class BarkView {
      * @param {Array} holders - Array of holder account objects
      * @param {string} tableBodyId - The ID of the table body where data will be inserted
      */
-    static displayTopHoldersForToken(holders, tableBodyId) {
+    static displayTopHoldersForToken(holders, tableBodyId, tokenId) {
         const holdersTable = document.getElementById(tableBodyId);
         if (!holdersTable) {
             console.error(`Top holders table element with ID '${tableBodyId}' not found.`);
             return;
         }
-
+    
         // Clear any existing content
         holdersTable.innerHTML = '';
-
+    
         // Add rows for each holder
         holders.forEach((holder, index) => {
             let row = document.createElement('tr');
-
+    
             // Rank cell
             let rankCell = document.createElement('td');
             rankCell.textContent = index + 1;
             row.appendChild(rankCell);
-
+    
             // Account ID cell
             let accountIdCell = document.createElement('td');
             accountIdCell.textContent = holder.account;
             row.appendChild(accountIdCell);
-
+    
             // Balance cell
             let balanceCell = document.createElement('td');
-            balanceCell.textContent = BarkUtils.formatNumber(holder.balance);
+            let formattedBalance;
+    
+            // Check if the token is the LP token and format accordingly
+            if (tokenId === '0.0.5794835') {
+                // Divide by 100,000,000 and round to 3 decimal places
+                formattedBalance = (holder.balance / 100000000).toFixed(3);
+            } else {
+                // Display the balance as is for other tokens
+                formattedBalance = holder.balance.toLocaleString('en-US');
+            }
+    
+            balanceCell.textContent = formattedBalance;
             row.appendChild(balanceCell);
-
+    
             // Append the row to the table body
             holdersTable.appendChild(row);
         });
     }
+    
+    
+ // Function to display top holders of the LP token
+static displayTopLPHolders(holders) {
+    BarkView.displayTopHoldersForToken(holders, 'topLPHoldersTableBody', '0.0.5794835');
+}
 
-    // Function to display top holders of the LP token
-    static displayTopLPHolders(holders) {
-        BarkView.displayTopHoldersForToken(holders, 'topLPHoldersTableBody');
-    }
 
     // Display bark power data
     static displayBarkPowerData(
