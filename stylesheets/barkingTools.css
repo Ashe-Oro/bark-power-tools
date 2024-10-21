@@ -48,7 +48,6 @@ body {
     font-weight: bold;
 }
 
-
 /* Font color for Bark Power Checker */
 h1 {
     text-align: center;
@@ -75,7 +74,7 @@ button {
 }
 
 button:hover {
-    background-color: #18BAA4;
+    background-color: #16a085;
 }
 
 .output, .error {
@@ -185,9 +184,67 @@ th {
     }
 }
 
+/* Styling for the top holders section */
+.top-holders-container {
+    background-color: rgba(255, 255, 255, 0.85); /* Slight transparency */
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 500px;
+    padding: 20px;
+    margin: 20px auto; /* Center the section */
+    text-align: center;
+}
+
+/* Button styling for the Fetch Top Holders button */
+#fetchTopHoldersButton {
+    background-color: #1F3C40;
+    color: white;
+    border: none;
+    padding: 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-bottom: 20px;
+    width: 100%;
+}
+
+#fetchTopHoldersButton:hover {
+    background-color: #162a2d;
+}
+
+/* Table styling for the top holders table */
+#topHoldersTable {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+#topHoldersTable th, #topHoldersTable td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+#topHoldersTable th {
+    background-color: #f2f2f2;
+}
+
+#topHoldersTableBody tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+#topHoldersTableBody tr:hover {
+    background-color: #f1f1f1;
+}
+
+/* Hide the top holders section by default */
+#topHoldersSection {
+    display: block;
+}
+
 /* Responsive Media Queries */
 @media (max-width: 768px) {
-    .container, .leaderboard-container {
+    .container, .leaderboard-container, .top-holders-container {
         width: 90%;
         padding: 15px;
     }
@@ -206,7 +263,7 @@ th {
 }
 
 @media (max-width: 480px) {
-    .container, .leaderboard-container {
+    .container, .leaderboard-container, .top-holders-container {
         padding: 10px;
     }
 

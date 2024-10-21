@@ -117,6 +117,126 @@ class BarkApi {
         const data = await response.json();
         return data;
     }
+
+    /**
+     * Fetch all accounts with balances >= minBalance, handling pagination
+     * @param {number} minBalance - Minimum balance filter (e.g., 100000)
+     * @returns {Array} - Array of account balance objects
+     */
+    static async fetchAllTokenBalances(minBalance = 100000) {
+        const baseUrl = `${BASE_URLS.mirrorNode}/balances`;
+        const tokenBalancesUrl = `${baseUrl}?account.balance=gt%3A${minBalance}&limit=100`;
+
+        let allBalances = [];
+        let nextUrl = tokenBalancesUrl;
+
+        try {
+            // Loop to fetch all pages of results
+            while (nextUrl) {
+                const response = await fetch(nextUrl);
+                if (!response.ok) {
+                    throw new Error('Failed to fetch token balances.');
+                }
+
+                const data = await response.json();
+                // Add the current page of balances to the list
+                allBalances = allBalances.concat(data.balances || []);
+
+                // Check if there is a "next" page
+                nextUrl = data.links?.next || null;
+            }
+
+            return allBalances;
+        } catch (error) {
+            console.error('Error fetching token balances:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Fetch all accounts with balances >= minBalance for a specific token, handling pagination
+     * @param {number} minBalance - Minimum balance filter (e.g., 1)
+     * @param {string} tokenId - Token ID (e.g., '0.0.5794835')
+     * @returns {Array} - Array of account balance objects
+     */
+    static async fetchAllTokenBalancesForToken(tokenId, minBalance = 1) {
+        const baseUrl = `https://mainnet-public.mirrornode.hedera.com/api/v1/tokens/${tokenId}/balances`;
+        const tokenBalancesUrl = `${baseUrl}?account.balance=gt%3A${minBalance}&limit=100`;
+
+        let allBalances = [];
+        let nextUrl = tokenBalancesUrl;
+
+        try {
+            // Loop to fetch all pages of results
+            while (nextUrl) {
+                const response = await fetch(nextUrl);
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch token balances for tokenId ${tokenId}.`);
+                }
+
+                const data = await response.json();
+                // Add the current page of balances to the list
+                allBalances = allBalances.concat(data.balances || []);
+
+                // Check if there is a "next" page
+                nextUrl = data.links?.next || null;
+            }
+
+            return allBalances;
+        } catch (error) {
+            console.error(`Error fetching token balances for tokenId ${tokenId}:`, error);
+            throw error;
+        }
+    }
+
+    /**
+     * Fetch top holders of a specific token
+     * @param {string} tokenId - Token ID (e.g., '0.0.5022567' for $hbark)
+     * @param {number} minBalance - Minimum balance filter (e.g., 100000)
+     * @param {number} topLimit - Number of top holders to fetch (e.g., 10)
+     * @returns {Array} - Array of top holder account objects
+     */
+    static async fetchTopHoldersForToken(tokenId, minBalance = 100000, topLimit = 10) {
+        try {
+            // Fetch all token balances with the specified minimum balance
+            const allBalances = await this.fetchAllTokenBalancesForToken(tokenId, minBalance);
+
+            if (!allBalances || allBalances.length === 0) {
+                throw new Error('No accounts found with the specified balance.');
+            }
+
+            // Sort the accounts by balance in descending order
+            const sortedBalances = allBalances.sort((a, b) => b.balance - a.balance);
+
+            // Get the top accounts based on the specified limit
+            const topHolders = sortedBalances.slice(0, topLimit);
+
+            return topHolders;
+        } catch (error) {
+            console.error(`Error fetching top holders for tokenId ${tokenId}:`, error);
+            throw error;
+        }
+    }
+
+    // Remove or comment out the existing fetchTopHolders method as it's not usable
+    /*
+    // Fetch top holders of the $hbark token
+    static async fetchTopHolders(limit = 10) {
+        const url = `${BASE_URLS.mirrorNode}/balances?limit=${limit}&order=desc`;
+
+        try {
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error('Failed to fetch top holders.');
+            }
+            const data = await response.json();
+            return data.balances || [];
+        } catch (error) {
+            console.error('Error fetching top holders:', error);
+            throw error;
+        }
+    }
+    */
 }
 
 class BarkView {
@@ -146,6 +266,85 @@ class BarkView {
 
         document.getElementById('error').textContent = errorMessage;
         error ? console.error(message, error) : console.error(message);
+    }
+
+    // Function to display top holders of the $hbark token
+    static displayTopHolders(holders) {
+        const holdersTable = document.getElementById('topHoldersTableBody');
+        if (!holdersTable) {
+            console.error('Top holders table element not found.');
+            return;
+        }
+
+        // Clear any existing content
+        holdersTable.innerHTML = '';
+
+        // Add rows for each holder
+        holders.forEach((holder, index) => {
+            let row = document.createElement('tr');
+
+            // Rank cell
+            let rankCell = document.createElement('td');
+            rankCell.textContent = index + 1;
+            row.appendChild(rankCell);
+
+            // Account ID cell
+            let accountIdCell = document.createElement('td');
+            accountIdCell.textContent = holder.account;
+            row.appendChild(accountIdCell);
+
+            // Balance cell
+            let balanceCell = document.createElement('td');
+            balanceCell.textContent = BarkUtils.formatNumber(holder.balance);
+            row.appendChild(balanceCell);
+
+            // Append the row to the table body
+            holdersTable.appendChild(row);
+        });
+    }
+
+    /**
+     * Function to display top holders of a specific token
+     * @param {Array} holders - Array of holder account objects
+     * @param {string} tableBodyId - The ID of the table body where data will be inserted
+     */
+    static displayTopHoldersForToken(holders, tableBodyId) {
+        const holdersTable = document.getElementById(tableBodyId);
+        if (!holdersTable) {
+            console.error(`Top holders table element with ID '${tableBodyId}' not found.`);
+            return;
+        }
+
+        // Clear any existing content
+        holdersTable.innerHTML = '';
+
+        // Add rows for each holder
+        holders.forEach((holder, index) => {
+            let row = document.createElement('tr');
+
+            // Rank cell
+            let rankCell = document.createElement('td');
+            rankCell.textContent = index + 1;
+            row.appendChild(rankCell);
+
+            // Account ID cell
+            let accountIdCell = document.createElement('td');
+            accountIdCell.textContent = holder.account;
+            row.appendChild(accountIdCell);
+
+            // Balance cell
+            let balanceCell = document.createElement('td');
+            balanceCell.textContent = BarkUtils.formatNumber(holder.balance);
+            row.appendChild(balanceCell);
+
+            // Append the row to the table body
+            holdersTable.appendChild(row);
+        });
+    }
+
+    // Function to display top holders of the LP token
+    static displayTopLPHolders(holders) {
+        BarkView.displayTopHoldersForToken(holders, 'topLPHoldersTableBody');
     }
 
     // Display bark power data
@@ -528,6 +727,68 @@ class BarkManager {
         }
     }
 
+    /**
+     * Fetch and display the top 10 accounts with the highest $hbark balances
+     */
+    static async fetchAndDisplayTopHolders() {
+        BarkView.showLeaderboardSpinner();
+
+        try {
+            // Fetch all token balances with a minimum balance filter
+            const allBalances = await BarkApi.fetchAllTokenBalances(100000);
+
+            if (!allBalances || allBalances.length === 0) {
+                throw new Error('No accounts found with the specified balance.');
+            }
+
+            // Sort the accounts by balance in descending order
+            const sortedBalances = allBalances.sort((a, b) => b.balance - a.balance);
+
+            // Get the top 10 accounts
+            const topHolders = sortedBalances.slice(0, 10);
+
+            // Display the top 10 accounts
+            BarkView.displayTopHolders(topHolders);
+        } catch (error) {
+            BarkView.displayErrorMessage(error, 'Unable to fetch top holders at this time.');
+        } finally {
+            BarkView.hideLeaderboardSpinner();
+        }
+    }
+
+    /**
+     * Fetch and display the top 10 accounts with the highest LP token balances
+     */
+    static async fetchAndDisplayTopLPHolders() {
+        BarkView.showLeaderboardSpinner();
+
+        try {
+            const tokenId = '0.0.5794835'; // LP Token ID
+            const minBalance = 1; // Minimum balance for LP token
+            const topLimit = 10; // Top 10 holders
+
+            // Fetch all token balances with the specified minimum balance
+            const allBalances = await BarkApi.fetchAllTokenBalancesForToken(tokenId, minBalance);
+
+            if (!allBalances || allBalances.length === 0) {
+                throw new Error('No accounts found with the specified LP token balance.');
+            }
+
+            // Sort the accounts by balance in descending order
+            const sortedBalances = allBalances.sort((a, b) => b.balance - a.balance);
+
+            // Get the top 10 accounts
+            const topLPHolders = sortedBalances.slice(0, topLimit);
+
+            // Display the top 10 LP token holders
+            BarkView.displayTopLPHolders(topLPHolders);
+        } catch (error) {
+            BarkView.displayErrorMessage(error, 'Unable to fetch top LP token holders at this time.');
+        } finally {
+            BarkView.hideLeaderboardSpinner();
+        }
+    }
+
     // Retrieve and sanitize user input
     static getUserInput() {
         let userInput = document.getElementById('twitterHandle').value;
@@ -669,6 +930,7 @@ class BarkManager {
         }
     }
 
+
     // Process user data and determine account label
     static async processUserData(userData) {
         let accountLabel;
@@ -695,17 +957,32 @@ class BarkManager {
     }
 }
 
-// Event listener for the "Check Bark Power" button
-const checkBarkPowerButton = document.getElementById('checkBarkPower');
-if (checkBarkPowerButton) {
-    checkBarkPowerButton.addEventListener('click', BarkManager.checkBarkPower);
-}
+// Event listeners for buttons are added after the classes are defined
+document.addEventListener('DOMContentLoaded', () => {
+    // Event listener for the "Check Bark Power" button
+    const checkBarkPowerButton = document.getElementById('checkBarkPower');
+    if (checkBarkPowerButton) {
+        checkBarkPowerButton.addEventListener('click', BarkManager.checkBarkPower);
+    }
 
-// Event listener for the "Fetch Barks Remaining" button
-const fetchBarksRemainingButton = document.getElementById('fetchBarksRemainingButton');
-if (fetchBarksRemainingButton) {
-    fetchBarksRemainingButton.addEventListener('click', BarkView.fetchBarksRemaining);
-}
+    // Event listener for the "Fetch Barks Remaining" button
+    const fetchBarksRemainingButton = document.getElementById('fetchBarksRemainingButton');
+    if (fetchBarksRemainingButton) {
+        fetchBarksRemainingButton.addEventListener('click', BarkView.fetchBarksRemaining);
+    }
+
+    // Event listener for the "Fetch Top $hbark Holders" button
+    const fetchTopHoldersButton = document.getElementById('fetchTopHoldersButton');
+    if (fetchTopHoldersButton) {
+        fetchTopHoldersButton.addEventListener('click', BarkManager.fetchAndDisplayTopHolders);
+    }
+
+    // Event listener for the "Fetch Top LP Token Holders" button
+    const fetchTopLPHoldersButton = document.getElementById('fetchTopLPHoldersButton');
+    if (fetchTopLPHoldersButton) {
+        fetchTopLPHoldersButton.addEventListener('click', BarkManager.fetchAndDisplayTopLPHolders);
+    }
+});
 
 // Update the toggleDetails and clearSearch functions to use BarkView
 function toggleDetails() {
