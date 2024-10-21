@@ -269,46 +269,100 @@ class BarkView {
     }
 
     // Function to display top holders of the $hbark token
-    static displayTopHolders(holders) {
-        const holdersTable = document.getElementById('topHoldersTableBody');
-        if (!holdersTable) {
-            console.error('Top holders table element not found.');
-            return;
+   /**
+     * Function to display top holders of the $hbark token
+     * @param {Array} holders - Array of holder account objects
+     */
+   static async displayTopHolders(holders) {
+    const holdersTable = document.getElementById('topHoldersTableBody');
+    if (!holdersTable) {
+        console.error('Top holders table element not found.');
+        return;
+    }
+
+    // List of accountIds to ignore
+    const ignoredAccountIds = [
+        '0.0.5022502', '0.0.5225307', '0.0.5794834', '0.0.5755573',
+        '0.0.5243302', '0.0.5243823', '0.0.5755692', '0.0.5243828',
+        '0.0.5243381'
+    ];
+
+    // Clear any existing content
+    holdersTable.innerHTML = '';
+
+    let displayedCount = 0;
+    let currentIndex = 0;
+    const totalHolders = holders.length;
+
+    while (displayedCount < 10 && currentIndex < totalHolders) {
+        const holder = holders[currentIndex];
+        currentIndex++;
+
+        // Skip ignored accountIds
+        if (ignoredAccountIds.includes(holder.account)) {
+            continue;
         }
 
-        // Clear any existing content
-        holdersTable.innerHTML = '';
+        let displayName = holder.account;
 
-        // Add rows for each holder
-        holders.forEach((holder, index) => {
-            let row = document.createElement('tr');
+        try {
+            // Fetch the user data to check if a Twitter handle is available
+            const userData = await BarkApi.fetchUserByAccountId(holder.account);
+            if (userData && userData.twitterHandle) {
+                displayName = `@${userData.twitterHandle}`;
+            }
+        } catch (error) {
+            console.error(`Error fetching user data for accountId ${holder.account}:`, error);
+        }
 
-            // Rank cell
-            let rankCell = document.createElement('td');
-            rankCell.textContent = index + 1;
-            row.appendChild(rankCell);
+        // Create a new row
+        let row = document.createElement('tr');
 
-            // Account ID cell
-            let accountIdCell = document.createElement('td');
-            accountIdCell.textContent = holder.account;
-            row.appendChild(accountIdCell);
+        // Rank cell
+        let rankCell = document.createElement('td');
+        rankCell.textContent = displayedCount + 1; // Rank starts at 1
+        row.appendChild(rankCell);
 
-            // Balance cell
-            let balanceCell = document.createElement('td');
-            balanceCell.textContent = BarkUtils.formatNumber(holder.balance);
-            row.appendChild(balanceCell);
+        // Account ID or Twitter Handle cell
+        let accountIdCell = document.createElement('td');
+        accountIdCell.textContent = displayName;
+        row.appendChild(accountIdCell);
 
-            // Append the row to the table body
-            holdersTable.appendChild(row);
-        });
+        // Balance cell (display as-is for $hbark token)
+        let balanceCell = document.createElement('td');
+        balanceCell.textContent = holder.balance.toLocaleString('en-US'); // Format the number with commas
+        row.appendChild(balanceCell);
+
+        // Append the row to the table body
+        holdersTable.appendChild(row);
+
+        displayedCount++;
     }
+
+    // Check if less than 10 holders were displayed
+    if (displayedCount < 10) {
+        console.warn(`Only ${displayedCount} holders found after filtering ignored accountIds.`);
+        // Optionally, you can display a message to the user
+        const messageRow = document.createElement('tr');
+        const messageCell = document.createElement('td');
+        messageCell.colSpan = 3;
+        messageCell.textContent = "Not enough holders to display 10 entries.";
+        messageCell.style.textAlign = "center";
+        row.appendChild(messageCell);
+        holdersTable.appendChild(messageRow);
+    }
+}
+    
+    
+    
+    
 
     /**
      * Function to display top holders of a specific token
      * @param {Array} holders - Array of holder account objects
      * @param {string} tableBodyId - The ID of the table body where data will be inserted
      */
-    static displayTopHoldersForToken(holders, tableBodyId, tokenId) {
+    static async displayTopHoldersForToken(holders, tableBodyId, tokenId) {
         const holdersTable = document.getElementById(tableBodyId);
         if (!holdersTable) {
             console.error(`Top holders table element with ID '${tableBodyId}' not found.`);
@@ -319,17 +373,29 @@ class BarkView {
         holdersTable.innerHTML = '';
     
         // Add rows for each holder
-        holders.forEach((holder, index) => {
+        for (const holder of holders) {
             let row = document.createElement('tr');
     
             // Rank cell
             let rankCell = document.createElement('td');
-            rankCell.textContent = index + 1;
+            rankCell.textContent = holders.indexOf(holder) + 1;
             row.appendChild(rankCell);
     
-            // Account ID cell
+            // Account ID or Twitter Handle cell
             let accountIdCell = document.createElement('td');
-            accountIdCell.textContent = holder.account;
+            let displayName = holder.account;
+    
+            try {
+                // Fetch the user data to check if a Twitter handle is available
+                const userData = await BarkApi.fetchUserByAccountId(holder.account);
+                if (userData && userData.twitterHandle) {
+                    displayName = `@${userData.twitterHandle}`;
+                }
+            } catch (error) {
+                console.error(`Error fetching user data for accountId ${holder.account}:`, error);
+            }
+    
+            accountIdCell.textContent = displayName;
             row.appendChild(accountIdCell);
     
             // Balance cell
@@ -350,8 +416,9 @@ class BarkView {
     
             // Append the row to the table body
             holdersTable.appendChild(row);
-        });
+        }
     }
+    
     
     
  // Function to display top holders of the LP token
@@ -757,11 +824,8 @@ class BarkManager {
             // Sort the accounts by balance in descending order
             const sortedBalances = allBalances.sort((a, b) => b.balance - a.balance);
 
-            // Get the top 10 accounts
-            const topHolders = sortedBalances.slice(0, 10);
-
-            // Display the top 10 accounts
-            BarkView.displayTopHolders(topHolders);
+            // Display the top 10 accounts, excluding ignored accountIds
+            await BarkView.displayTopHolders(sortedBalances);
         } catch (error) {
             BarkView.displayErrorMessage(error, 'Unable to fetch top holders at this time.');
         } finally {
