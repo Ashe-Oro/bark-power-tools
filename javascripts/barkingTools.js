@@ -3,10 +3,117 @@ let detailsVisible = false;
 
 // Base URLs for API endpoints
 const BASE_URLS = {
-    mirrorNode: 'https://mainnet-public.mirrornode.hedera.com/api/v1/tokens/0.0.5022567',
+    mirrorNode: 'https://mainnet-public.mirrornode.hedera.com/api/v1',
     barkingPower: 'https://sure-angeline-piotrswierzy-b061c303.koyeb.app/barking-power',
     users: 'https://sure-angeline-piotrswierzy-b061c303.koyeb.app/users',
     leaderboard: 'https://sure-angeline-piotrswierzy-b061c303.koyeb.app/barking-power/leaderboard',
+    geckoTerminal: 'https://api.geckoterminal.com/api/v2/networks/hedera-hashgraph/pools/0x6c241d9dea13214b43d198585ce214caf4d346df'
+}
+
+const TOKEN_IDS = {
+  hbar: '0x0000000000000000000000000000000000163b5a',
+  hbark: '0x00000000000000000000000000000000004ca367'
+}
+
+class BarkHistory {
+  static async fetchPool() {
+    const poolData = await BarkApi.fetchPool();
+    const poolAttributes = poolData.data.attributes;
+
+    return {
+      "buys": poolAttributes.transactions.h24.buys,
+      "sells": poolAttributes.transactions.h24.sells,
+      "volume": parseFloat(poolAttributes.volume_usd.h24).toFixed(2),
+      "priceChangePercentage": poolAttributes.price_change_percentage.h24,
+      "quotePrice": parseFloat(poolAttributes.quote_token_price_usd).toFixed(2),
+      "basePrice": parseFloat(poolAttributes.base_token_price_usd).toFixed(7)
+    }
+  }
+
+  static async fetchRecentTrades() {
+    const tradeData = await BarkApi.fetchTrades();
+    const trades = tradeData.data;
+
+    // Sort trades in ascending order by timestamp to process balance correctly
+    trades.sort((a, b) => new Date(a.attributes.block_timestamp) - new Date(b.attributes.block_timestamp));
+
+    let accountBalances = {}; // Track balances for each account
+    let tradeResults = []; // Track trade results;
+
+    for (const [index, trade] of trades.entries()) {  // Corrected arrow function
+      const tradeAttributes = trade.attributes;
+
+      let hederaAccount;
+      try {
+        const accountData = await BarkApi.fetchHederaAccount(tradeAttributes.tx_from_address);
+        hederaAccount = accountData.account;
+      } catch (error) {
+        console.warn(error);
+      }
+
+      let twitterHandle;
+      try {
+        const twitterData = await BarkApi.fetchTwitterAccount(hederaAccount);
+        twitterHandle = twitterData.twitterHandle || 'Unknown';
+      } catch (error) {
+        console.warn(error);
+        twitterHandle = 'Unknown;'
+      }
+
+      // Initialize HBARK balance if not already tracked
+      if (hederaAccount && !(hederaAccount in accountBalances)) {
+        try {
+          const balanceData = await BarkApi.fetchHederaAccountBalance(hederaAccount);
+          accountBalances[hederaAccount] = balanceData.balances.length > 0 ? balanceData.balances[0].balance : 0;
+        } catch (balanceError) {
+          console.error('Error fetching HBARK balance:', balanceError);
+          accountBalances[hederaAccount] = 0;
+        }
+      }
+
+      let fromTokenId = tradeAttributes.from_token_address;
+      let toTokenId = tradeAttributes.to_token_address;
+
+      if (fromTokenId === TOKEN_IDS.hbar) fromTokenId = 'HBAR';
+      if (fromTokenId === TOKEN_IDS.hbark) fromTokenId = 'HBARK';
+      if (toTokenId === TOKEN_IDS.hbar) toTokenId = 'HBAR';
+      if (toTokenId === TOKEN_IDS.hbark) toTokenId = 'HBARK';
+
+      let tradeType = tradeAttributes.kind.toUpperCase();
+      const fromTokenAmountRounded = Math.round(tradeAttributes.from_token_amount);
+      const toTokenAmountRounded = Math.round(tradeAttributes.to_token_amount);
+
+      let fromTokenValueUSD = fromTokenAmountRounded * tradeAttributes.price_from_in_usd;
+      let toTokenValueUSD = toTokenAmountRounded * tradeAttributes.price_to_in_usd;
+
+      fromTokenValueUSD = this.formatCurrency(fromTokenValueUSD, fromTokenId);
+      toTokenValueUSD = this.formatCurrency(toTokenValueUSD, toTokenId);
+
+      tradeResults.push({
+        "number": index + 1,
+        "timestamp": tradeAttributes.block_timestamp,
+        "txHash": tradeAttributes.tx_hash,
+        "from_address": hederaAccount,
+        "twitter": twitterHandle,
+        "hbarkBalance": hederaAccount ? accountBalances[hederaAccount] : 0,
+        "fromTokenAmount": fromTokenAmountRounded,
+        "fromTokenId": fromTokenId,
+        "priceFromUsd": Number(parseFloat(tradeAttributes.price_from_in_usd).toFixed(7)),
+        "totalFromValueUsd": fromTokenValueUSD,
+        "toTokenAmount": toTokenAmountRounded,
+        "toTokenId": toTokenId,
+        "priceToUsd": Number(parseFloat(tradeAttributes.price_to_in_usd).toFixed(7)),
+        "totalToValueUsd": toTokenValueUSD,
+        "type": tradeType
+      });
+    }
+
+    return tradeResults;
+  }
+
+  static formatCurrency(value, tokenId) {
+    return Number(value.toFixed(tokenId === 'HBARK' ? 7 : 2));
+  }
 }
 
 class BarkUtils {
@@ -54,7 +161,7 @@ class BarkApi {
 
     // Fetch balance by account ID
     static async fetchBalance(accountId) {
-        const url = `${BASE_URLS.mirrorNode}/balances?account.id=${accountId}`;
+        const url = `${BASE_URLS.mirrorNode}/tokens/0.0.5022567/balances?account.id=${accountId}`;
         const response = await fetch(url);
         return await response.json();
     }
@@ -116,6 +223,55 @@ class BarkApi {
         }
         const data = await response.json();
         return data;
+    }
+
+    // Fetch HBARK pool from CoinGecko
+    static async fetchPool() {
+        const url = `${BASE_URLS.geckoTerminal}?include=base_token%2Cquote_token`;
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch pool from CoinGecko: ${response.status}`);
+        }
+        return await response.json();
+    }
+
+    // Fetches HBARK trades from CoinGecko
+    static async fetchTrades() {
+        const url = `${BASE_URLS.geckoTerminal}/trades`;
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch trades from CoinGecko: ${response.status}`);
+        }
+        return await response.json();
+    }
+
+    // Fetches the Hedera account information
+    static async fetchHederaAccount(accountId) {
+      const url = `${BASE_URLS.mirrorNode}/accounts/${accountId}`;
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch Hedera account for ${accountId}`);
+      }
+      return await response.json();
+    }
+
+    // Fetches the Twitter account information
+    static async fetchTwitterAccount(accountId) {
+      const url = `${BASE_URLS.users}/${accountId}`;
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch Twitter account for ${accountId}`);
+      }
+      return await response.json();
+    }
+
+    static async fetchHederaAccountBalance(accountId) {
+      const url = `${BASE_URLS.mirrorNode}/tokens/0.0.5022567/balances?account.id=${accountId}`;
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch Hedera balance for ${accountId}`);
+      }
+      return await response.json();
     }
 }
 
